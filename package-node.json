@@ -1,6 +1,6 @@
 {
   "name": "trezor-link-node",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "Trezor Link for node",
   "main": "lib/index-node.js",
   "scripts": {
