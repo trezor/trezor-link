@@ -25,8 +25,8 @@ build-and-publish: git-clean git-ancestor check
 	npm publish
 	rm -rf lib
 	git add package.json
-	git commit -m `npm view . version`
-	git tag v`npm view . version`
+	git commit -m `node -e 'process.stdout.write(require("./package.json").version);'`
+	git tag v`node -e 'process.stdout.write(require("./package.json").version);'`
 	git push
 	git push --tags
 
