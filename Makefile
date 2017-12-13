@@ -24,7 +24,7 @@ build-and-publish: git-clean git-ancestor check
 	make build
 	npm publish
 	rm -rf lib
-	git add package*.json
+	git add package.json
 	git commit -m `npm view . version`
 	git tag v`npm view . version`
 	git push
