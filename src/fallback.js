@@ -10,7 +10,6 @@ export default class FallbackTransport {
 
   _availableTransports: Array<Transport>;
   transports: Array<Transport>;
-  configured: boolean;
   version: string;
   debug: boolean = false;
 
@@ -23,29 +22,11 @@ export default class FallbackTransport {
   }
 
   // first one that inits successfuly is the final one; others won't even start initing
-  async _tryInitTransports(): Promise<Array<Transport>> {
-    const res: Array<Transport> = [];
+  async _tryTransports(): Promise<Transport> {
     let lastError: ?Error = null;
     for (const transport of this.transports) {
       try {
         await transport.init(this.debug);
-        res.push(transport);
-      } catch (e) {
-        lastError = e;
-      }
-    }
-    if (res.length === 0) {
-      throw lastError || new Error(`No transport could be initialized.`);
-    }
-    return res;
-  }
-
-  // first one that inits successfuly is the final one; others won't even start initing
-  async _tryConfigureTransports(data: string): Promise<Transport> {
-    let lastError: ?Error = null;
-    for (const transport of this._availableTransports) {
-      try {
-        await transport.configure(data);
         return transport;
       } catch (e) {
         lastError = e;
@@ -58,25 +39,17 @@ export default class FallbackTransport {
   async init(debug: ?boolean): Promise<void> {
     this.debug = !!debug;
 
-    // init ALL OF THEM
-    const transports = await this._tryInitTransports();
-    this._availableTransports = transports;
-
-    // a slight hack - configured is always false, so we force caller to call configure()
-    // to find out the actual working transport (bridge falls on configure, not on info)
-    this.version = transports[0].version;
-    this.configured = false;
-  }
-
-  async configure(signedData: string): Promise<void> {
-    this.activeTransport = await this._tryConfigureTransports(signedData);
-    this.configured = this.activeTransport.configured;
+    const transport = await this._tryTransports();
+    this.activeTransport = transport;
     this.version = this.activeTransport.version;
     this.activeName = this.activeTransport.name;
     this.requestNeeded = this.activeTransport.requestNeeded;
   }
 
-  // using async so I get Promise.recect on this.activeTransport == null (or other error), not Error
+  setMessages(messagesJson: Object): void {
+    this.activeTransport.setMessages(messagesJson);
+  }
+
   async enumerate(): Promise<Array<TrezorDeviceInfoWithSession>> {
     return this.activeTransport.enumerate();
   }

@@ -4,8 +4,7 @@ import {patch} from './protobuf/monkey_patch';
 patch();
 
 import {create as createDefered} from '../defered';
-import {parseConfigure} from './protobuf/parse_protocol';
-import {verifyHexBin} from './verify';
+import {createMessages} from './protobuf/create_messages';
 import {buildAndSend} from './send';
 import {receiveAndParse} from './receive';
 import {resolveTimeoutPromise} from '../defered';
@@ -95,7 +94,6 @@ export default class LowlevelTransportWithSharedConnections {
 
   _messages: ?Messages;
   version: string;
-  configured: boolean = false;
 
   _sharedWorkerFactory: ?() => ?SharedWorker;
   sharedWorker: ?SharedWorker;
@@ -222,11 +220,9 @@ export default class LowlevelTransportWithSharedConnections {
   }
 
   @debugInOut
-  async configure(signedData: string): Promise<void> {
-    const buffer = verifyHexBin(signedData);
-    const messages = parseConfigure(buffer);
+  setMessages(messagesJson: Object): void {
+    const messages = createMessages(messagesJson);
     this._messages = messages;
-    this.configured = true;
   }
 
   _sendLowlevel(path: string): (data: ArrayBuffer) => Promise<void> {

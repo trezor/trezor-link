@@ -22,13 +22,14 @@ export type Transport = {
   listen(old: ?Array<TrezorDeviceInfoWithSession>): Promise<Array<TrezorDeviceInfoWithSession>>;
   acquire(input: AcquireInput): Promise<string>;
   release(session: string): Promise<void>;
-  configure(signedData: string): Promise<void>;
+
+  setMessages(messages: Object): void;
+
   call(session: string, name: string, data: Object): Promise<MessageFromTrezor>;
 
   // resolves when the transport can be used; rejects when it cannot
   init(debug: ?boolean): Promise<void>;
 
-  configured: boolean;
   version: string;
   name: string;
 

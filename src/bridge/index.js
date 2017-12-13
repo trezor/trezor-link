@@ -13,8 +13,8 @@ import * as check from '../highlevel-checks';
 
 import {buildOne} from '../lowlevel/send';
 import type {Messages} from '../lowlevel/protobuf/messages';
-import {parseConfigure} from '../lowlevel/protobuf/parse_protocol';
-import {verifyHexBin} from '../lowlevel/verify';
+import {createMessages} from '../lowlevel/protobuf/create_messages';
+
 import {receiveOne} from '../lowlevel/receive';
 
 import {debugInOut} from '../debug-decorator';
@@ -30,7 +30,6 @@ type IncompleteRequestOptions = {
 export default class BridgeTransport {
   name: string = `BridgeTransport`;
   version: string = ``;
-  configured: boolean = false;
   isOutdated: boolean;
   isDirect: boolean;
 
@@ -66,7 +65,6 @@ export default class BridgeTransport {
     });
     const info = check.info(infoS);
     this.version = info.version;
-    this.configured = info.configured;
     const newVersion = check.version(await http({
       url: `${this.newestVersionUrl}?${Date.now()}`,
       method: `GET`,
@@ -76,20 +74,9 @@ export default class BridgeTransport {
   }
 
   @debugInOut
-  async configure(config: string): Promise<void> {
-    if (this.isDirect) {
-      const buffer = verifyHexBin(config);
-      const messages = parseConfigure(buffer);
-      this._messages = messages;
-      this.configured = true;
-    }
-
-    await this._post({
-      url: `/configure`,
-      body: config,
-    });
-    // we should reload configured after configure
-    await this._silentInit();
+  setMessages(messagesJson: Object): void {
+    const messages = createMessages(messagesJson);
+    this._messages = messages;
   }
 
   @debugInOut
@@ -99,14 +86,7 @@ export default class BridgeTransport {
         ? this._get({url: `/listen`})
         : this._post({
           url: `/listen`,
-          body: old.map(device => {
-            return {
-              ...device,
-              // hack for old trezord
-              product: 1,
-              vendor: 21324,
-            };
-          }),
+          body: old,
         })
     );
     const devices = check.devices(devicesS);
@@ -144,31 +124,20 @@ export default class BridgeTransport {
 
   @debugInOut
   async call(session: string, name: string, data: Object): Promise<MessageFromTrezor> {
-    if (this.isDirect) {
-      if (this._messages == null) {
-        throw new Error(`Transport not configured.`);
-      }
-      const messages = this._messages;
-      const outData = buildOne(messages, name, data).toString(`hex`);
-      const resData = await this._post({
-        url: `/call/` + session,
-        body: outData,
-      });
-      if (typeof resData !== `string`) {
-        throw new Error(`Returning data is not string.`);
-      }
-      const jsonData = receiveOne(messages, new Buffer(resData));
-      return check.call(jsonData);
+    if (this._messages == null) {
+      throw new Error(`Transport not configured.`);
     }
-
-    const res = await this._post({
+    const messages = this._messages;
+    const outData = buildOne(messages, name, data).toString(`hex`);
+    const resData = await this._post({
       url: `/call/` + session,
-      body: {
-        type: name,
-        message: data,
-      },
+      body: outData,
     });
-    return check.call(res);
+    if (typeof resData !== `string`) {
+      throw new Error(`Returning data is not string.`);
+    }
+    const jsonData = receiveOne(messages, new Buffer(resData));
+    return check.call(jsonData);
   }
 
   static setFetch(fetch: any) {
