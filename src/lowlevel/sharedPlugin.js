@@ -7,7 +7,7 @@ export type LowlevelTransportSharedPlugin = {
   +send: (path: string, data: ArrayBuffer) => Promise<void>;
   +receive: (path: string) => Promise<ArrayBuffer>;
   +connect: (path: string) => Promise<void>;
-  +disconnect: (path: string) => Promise<void>;
+  +disconnect: (path: string, onclose: boolean) => Promise<void>;
 
   // webusb has a different model, where you have to
   // request device connection

@@ -172,7 +172,10 @@ export default class WebUsbPlugin {
   }
 
   @debugInOut
-  async disconnect(path: string): Promise<void> {
+  async disconnect(path: string, onclose: boolean): Promise<void> {
+    if (onclose) {
+      return;
+    }
     const device: USBDevice = await this._findDevice(path);
 
     await device.releaseInterface(this.interfaceId);

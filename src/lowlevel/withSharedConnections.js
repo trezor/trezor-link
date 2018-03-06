@@ -224,7 +224,7 @@ export default class LowlevelTransportWithSharedConnections {
 
     this._releaseCleanup(session);
     try {
-      await this.plugin.disconnect(path);
+      await this.plugin.disconnect(path, onclose);
     } catch (e) {
       // ignore release errors, it's not important that much
     }
