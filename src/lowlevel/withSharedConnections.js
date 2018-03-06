@@ -212,7 +212,7 @@ export default class LowlevelTransportWithSharedConnections {
   async release(session: string, onclose: boolean): Promise<void> {
     if (onclose) {
       this.sendToWorker({type: `release-onclose`, session});
-      return
+      return;
     }
     const messback = await this.sendToWorker({type: `release-intent`, session});
     if (messback.type === `double-release`) {
