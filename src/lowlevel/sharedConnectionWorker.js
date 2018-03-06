@@ -93,6 +93,12 @@ function handleMessage({id, message}: {id: number, message: MessageToSharedWorke
   if (message.type === `release-done`) {
     handleReleaseDone(id); // port is the same as original
   }
+  if (message.type === `enumerate-intent`) {
+    waitInQueue(() => handleEnumerateIntent(id, port));
+  }
+  if (message.type === `enumerate-done`) {
+    handleReleaseDone(id); // port is the same as original
+  }
 }
 
 function handleReleaseDone(
@@ -117,6 +123,19 @@ function handleReleaseOnClose(
   const path: string = path_;
   delete state[path];
   return Promise.resolve();
+}
+
+function handleEnumerateIntent(
+  id: number,
+  port: PortObject
+): Promise<void> {
+  startLock();
+  sendBack({type: `ok`}, id, port);
+
+  // if lock times out, promise rejects and queue goes on
+  return waitForLock().then((obj: {id: number}) => {
+    sendBack({type: `ok`}, obj.id, port);
+  });
 }
 
 function handleReleaseIntent(
