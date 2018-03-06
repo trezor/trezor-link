@@ -32,6 +32,9 @@ build: node_modules
 version-patch: TYPE = patch
 version-patch: .version
 
+version-prepatch: TYPE = prepatch
+version-prepatch: .version
+
 version-minor: TYPE = minor
 version-minor: .version
 
