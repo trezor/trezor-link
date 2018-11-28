@@ -40,9 +40,12 @@ export default class BridgeTransport {
 
   stopped: boolean = false;
 
-  constructor(url?: ?string, newestVersionUrl?: ?string) {
+  offline: boolean = false;
+
+  constructor(url?: ?string, newestVersionUrl?: ?string, offline?: ?boolean) {
     this.url = url == null ? DEFAULT_URL : url;
     this.newestVersionUrl = newestVersionUrl == null ? DEFAULT_VERSION_URL : newestVersionUrl;
+    if (offline != null) this.offline = offline;
   }
 
   async _post(options: IncompleteRequestOptions): Promise<mixed> {
@@ -65,11 +68,15 @@ export default class BridgeTransport {
     });
     const info = check.info(infoS);
     this.version = info.version;
-    const newVersion = check.version(await http({
-      url: `${this.newestVersionUrl}?${Date.now()}`,
-      method: `GET`,
-    }));
-    this.isOutdated = semvercmp(this.version, newVersion) < 0;
+    if (!this.offline) {
+      const newVersion = check.version(await http({
+        url: `${this.newestVersionUrl}?${Date.now()}`,
+        method: `GET`,
+      }));
+      this.isOutdated = semvercmp(this.version, newVersion) < 0;
+    } else {
+      this.isOutdated = false;
+    }
   }
 
   @debugInOut
