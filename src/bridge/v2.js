@@ -33,6 +33,7 @@ export default class BridgeTransport {
 
   url: string;
   newestVersionUrl: string;
+  bridgeVersion: string;
   debug: boolean = false;
 
   configured: boolean = false;
@@ -65,7 +66,7 @@ export default class BridgeTransport {
     });
     const info = check.info(infoS);
     this.version = info.version;
-    const newVersion = check.version(await http({
+    const newVersion = typeof this.bridgeVersion === `string` ? this.bridgeVersion : check.version(await http({
       url: `${this.newestVersionUrl}?${Date.now()}`,
       method: `GET`,
     }));
@@ -180,6 +181,10 @@ export default class BridgeTransport {
 
   setBridgeLatestUrl(url: string): void {
     this.newestVersionUrl = url;
+  }
+
+  setBridgeLatestVersion(version: string): void {
+    this.bridgeVersion = version;
   }
 
   stop(): void {
