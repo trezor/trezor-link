@@ -1,6 +1,6 @@
 {
   "name": "trezor-link",
-  "version": "1.6.0-bridge-fallback.1",
+  "version": "1.6.0-bridge-fallback.2",
   "description": "Trezor Link for browser",
   "main": "lib/index.js",
   "scripts": {
