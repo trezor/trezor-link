@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+      "outDir": "./lib",
+      "allowJs": true,
+      "target": "es5",
+      "downlevelIteration": true, // todo: remove
+    },
+    "include": ["./src/**/*"]
+  }
