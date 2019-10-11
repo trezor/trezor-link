@@ -7,7 +7,13 @@
     "type-check": "flow check src",
     "lint": "eslint src",
     "build:lib": "./scripts/build-lib.sh",
-    "publish:lib": "./scripts/publish-lib.sh"
+    "publish:lib": "./scripts/publish-lib.sh",
+    "test:unit": "jest",
+    "test:unit:basic": "jest --testPathPattern basic.test --coverage false",
+    "test:unit:old": "jest --testPathPattern old.test --coverage false",
+    "test:unit:new": "jest --testPathPattern new.test --coverage false",
+    "test:unit:new:debug": "node --inspect-brk node_modules/.bin/jest --runInBand --testPathPattern new.test --coverage false",
+    "test:integration": "jest --verbose -c jest.config.integration.js"
   },
   "repository": "https://github.com/trezor/trezor-link.git",
   "author": "Karel Bílek <kb@karelbilek.com>",
@@ -33,7 +39,8 @@
     "eslint-plugin-flowtype": "^5.2.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^5.0.0",
-    "flow-bin": "0.78.0"
+    "flow-bin": "0.78.0",
+    "jest": "^24.9.0"
   },
   "dependencies": {
     "bigi": "^1.4.1",
