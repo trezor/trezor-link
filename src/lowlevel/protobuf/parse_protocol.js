@@ -13,7 +13,12 @@ import * as compiledConfigProto from "./config_proto_compiled.js";
 // Parse configure data (it has to be already verified)
 export function parseConfigure(data: string): Messages {
   // incoming data are in JSON format
-  if (data.match(/^\{.*\}$/)) {
+  if (data && typeof data === `object` && Object.prototype.hasOwnProperty.call(data, `messages`)) {
+    const protobufMessages = ProtoBuf.newBuilder({})[`import`](data).build();
+    return new Messages(protobufMessages);
+  }
+  // incoming data are in JSON.stringify format
+  if (typeof data === `string` && data.match(/^\{.*\}$/)) {
     const protobufMessages = ProtoBuf.newBuilder({})[`import`](JSON.parse(data)).build();
     return new Messages(protobufMessages);
   }
