@@ -21,11 +21,16 @@ export class Messages {
     const messagesByType: MessageArray<number> = {};
     Object.keys(messages.MessageType).forEach(longName => {
       const typeId = messages.MessageType[longName];
-      const shortName = longName.split(`_`)[1];
-      messagesByType[typeId] = {
-        name: shortName,
-        constructor: messages[shortName],
-      };
+
+      let shortName = longName.split(`_`)[1];
+
+      // hack hack hack :(
+      const indexOfDeprecated = longName.indexOf(`Deprecated`);
+      if (indexOfDeprecated === -1) {
+        shortName = longName.split(`_`)[1];
+      } else {
+        shortName = longName.substr(indexOfDeprecated);
+      }
     });
     this.messagesByType = messagesByType;
     this.messageTypes = messages.MessageType;
