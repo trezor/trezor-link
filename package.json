@@ -1,6 +1,6 @@
 {
   "name": "trezor-link",
-  "version": "1.6.7",
+  "version": "1.6.7-new-passphrase-flow",
   "description": "Trezor Link for browser",
   "main": "lib/index.js",
   "scripts": {
