@@ -24,13 +24,12 @@ export class Messages {
 
       let shortName = longName.split(`_`)[1];
 
-      // hack hack hack :(
+      // hack hack hack. total lib refactor needed.
       const indexOfDeprecated = longName.indexOf(`Deprecated`);
-      if (indexOfDeprecated === -1) {
-        shortName = longName.split(`_`)[1];
-      } else {
+      if (indexOfDeprecated >= 0) {
         shortName = longName.substr(indexOfDeprecated);
       }
+
       messagesByType[typeId] = {
         name: shortName,
         constructor: messages[shortName],
