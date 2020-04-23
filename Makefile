@@ -4,6 +4,9 @@ flow: node_modules
 eslint: node_modules
 	cd src/; `npm bin`/eslint .
 
+test: node_modules
+	yarn test
+
 git-ancestor:
 	git fetch origin
 	git merge-base --is-ancestor origin/master master

@@ -1,7 +1,7 @@
 /* @flow */
 
 // Logic of recieving data from trezor
-// Logic of "call" is broken to two parts - sending and recieving
+// Logic of "call" is broken to two parts - sending and receiving
 
 import {MessageDecoder} from "./protobuf/message_decoder.js";
 import {ByteBuffer} from "protobufjs-old-fixed-webpack";
