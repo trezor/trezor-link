@@ -4,25 +4,12 @@
 //
 // Logic of "call" is broken to two parts - sending and recieving
 
-import ByteBuffer from 'bytebuffer';
-import type { Messages } from "./protobuf/messages.js";
+import * as ByteBuffer from 'bytebuffer';
+import type { Messages } from "./protobuf/messages";
 
 const patchNew = require('./protobuf/monkey_patch-new').patch;
 
 const HEADER_SIZE = 1 + 1 + 4 + 2;
-const MESSAGE_HEADER_BYTE: number = 0x23;
-const BUFFER_SIZE: number = 63;
-
-// Sends more buffers to device.
-async function sendBuffers(
-  sender: (data: ArrayBuffer) => Promise<void>,
-  buffers: Array<ArrayBuffer>
-): Promise<void> {
-  // eslint-disable-next-line prefer-const
-  for (let buffer of buffers) {
-    await sender(buffer);
-  }
-}
 
 // Sends message to device.
 // Resolves if everything gets sent
@@ -31,9 +18,10 @@ export function buildOne(
   name: string,
   data: Object
 ): Buffer {
-
-  const accessor = `hw.trezor.messages.${name}`
+  const accessor = `hw.trezor.messages.${name}`;
+  // @ts-ignore
   const messageType = messages.nested.hw.nested.trezor.nested.messages.nested.MessageType.values[`MessageType_${name}`];
+  // @ts-ignore
   const Message = messages.lookupType(accessor);
 
   const payload = patchNew(Message, data);

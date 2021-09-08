@@ -1,12 +1,10 @@
-/* @flow */
-
 // Logic of sending data to trezor
 //
 // Logic of "call" is broken to two parts - sending and recieving
 
 import * as ProtoBuf from "protobufjs-old-fixed-webpack";
 import {ByteBuffer} from "protobufjs-old-fixed-webpack";
-import type {Messages} from "./protobuf/messages.js";
+import type {Messages} from "./protobuf/messages";
 
 const HEADER_SIZE = 1 + 1 + 4 + 2;
 const MESSAGE_HEADER_BYTE: number = 0x23;
@@ -119,6 +117,7 @@ class BuiltMessage {
 
 // Removes $$hashkey from angular and remove nulls
 function cleanupInput(message: Object): void {
+  // @ts-ignore
   delete message.$$hashKey;
 
   for (const key in message) {

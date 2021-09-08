@@ -1,8 +1,4 @@
-/* @flow */
-
 import type {Transport, AcquireInput, TrezorDeviceInfoWithSession, MessageFromTrezor} from './transport';
-
-import {debugInOut} from './debug-decorator';
 
 export default class FallbackTransport {
   name: string = `FallbackTransport`;
@@ -25,7 +21,7 @@ export default class FallbackTransport {
   // first one that inits successfuly is the final one; others won't even start initing
   async _tryInitTransports(): Promise<Array<Transport>> {
     const res: Array<Transport> = [];
-    let lastError: ?Error = null;
+    let lastError: Error = null;
     for (const transport of this.transports) {
       try {
         await transport.init(this.debug);
@@ -42,7 +38,7 @@ export default class FallbackTransport {
 
   // first one that inits successfuly is the final one; others won't even start initing
   async _tryConfigureTransports(data: JSON | string): Promise<Transport> {
-    let lastError: ?Error = null;
+    let lastError: Error = null;
     for (const transport of this._availableTransports) {
       try {
         await transport.configure(data);
@@ -54,8 +50,7 @@ export default class FallbackTransport {
     throw lastError || new Error(`No transport could be initialized.`);
   }
 
-  @debugInOut
-  async init(debug: ?boolean): Promise<void> {
+  async init(debug?: boolean): Promise<void> {
     this.debug = !!debug;
 
     // init ALL OF THEM
@@ -84,7 +79,7 @@ export default class FallbackTransport {
     return this.activeTransport.enumerate();
   }
 
-  async listen(old: ?Array<TrezorDeviceInfoWithSession>): Promise<Array<TrezorDeviceInfoWithSession>> {
+  async listen(old?: Array<TrezorDeviceInfoWithSession>): Promise<Array<TrezorDeviceInfoWithSession>> {
     return this.activeTransport.listen(old);
   }
 
@@ -109,6 +104,7 @@ export default class FallbackTransport {
   }
 
   async requestDevice(): Promise<void> {
+    // @ts-ignore
     return this.activeTransport.requestDevice();
   }
 

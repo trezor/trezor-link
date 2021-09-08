@@ -1,9 +1,5 @@
+/** @type {import('ts-jest/dist/types').InitialOptionsTsJest} */
 module.exports = {
-    verbose: true,
-    collectCoverage: true,
-    collectCoverageFrom: [
-      "src/**",
-      "!**/node_modules/**",
-      "!**/vendor/**"
-    ]
-  };
+  preset: 'ts-jest',
+  testEnvironment: 'node'
+}

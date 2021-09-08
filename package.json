@@ -12,8 +12,9 @@
     "test:unit:basic": "jest --testPathPattern basic.test --coverage false",
     "test:unit:old": "jest --testPathPattern old.test --coverage false",
     "test:unit:new": "jest --testPathPattern new.test --coverage false",
-    "test:unit:new:debug": "node --inspect-brk node_modules/.bin/jest --runInBand --testPathPattern new.test --coverage false",
-    "test:integration": "jest --verbose -c jest.config.integration.js"
+    "test:unit:new:debug": "node --inspect-brk node_modules/.bin/ts-jest --runInBand --testPathPattern new.test --coverage false",
+    "test:integration": "jest --verbose -c jest.config.integration.js",
+    "build:new": "yarn tsc"
   },
   "repository": "https://github.com/trezor/trezor-link.git",
   "author": "Karel Bílek <kb@karelbilek.com>",
@@ -23,24 +24,14 @@
   },
   "homepage": "https://github.com/trezor/trezor-link",
   "devDependencies": {
-    "@babel/cli": "^7.12.10",
-    "@babel/core": "^7.12.10",
-    "@babel/plugin-proposal-class-properties": "^7.12.1",
-    "@babel/plugin-proposal-decorators": "^7.12.1",
-    "@babel/plugin-proposal-object-rest-spread": "^7.12.1",
-    "@babel/plugin-transform-runtime": "^7.12.10",
-    "@babel/preset-env": "^7.12.11",
-    "@babel/preset-flow": "^7.12.1",
-    "babel-eslint": "^10.1.0",
-    "babel-plugin-add-module-exports": "^1.0.4",
-    "babel-plugin-inline-version": "^1.0.2",
-    "bump-version": "^0.5.0",
+    "@types/jest": "^27.0.1",
+    "babel-jest": "^27.1.1",
     "eslint": "^7.16.0",
-    "eslint-plugin-flowtype": "^5.2.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^5.0.0",
-    "flow-bin": "0.78.0",
-    "jest": "^24.9.0"
+    "jest": "^27.1.1",
+    "ts-jest": "^27.0.5",
+    "typescript": "^4.4.2"
   },
   "dependencies": {
     "bigi": "^1.4.1",

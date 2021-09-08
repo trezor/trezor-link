@@ -1,4 +1,3 @@
-/* @flow */
 
 // To ensure that two website don't read from/to Trezor at the same time, I need a sharedworker
 // to synchronize them.
@@ -6,9 +5,9 @@
 // about intent to acquire/release and then send another message when that is done.
 // Other windows then can acquire/release
 
-// eslint-disable-next-line no-undef
-// $FlowIssue
+// @ts-ignore
 if (typeof onconnect !== `undefined`) {
+  // @ts-ignore
   // eslint-disable-next-line no-undef
   onconnect = function (e) {
     const port = e.ports[0];
@@ -28,7 +27,7 @@ import type {MessageFromSharedWorker, MessageToSharedWorker} from './withSharedC
 const normalSessions: {[path: string]: string} = {};
 const debugSessions: {[path: string]: string} = {};
 
-let lock: ?Defered<Object> = null;
+let lock: Defered<Object> | null = null;
 let waitPromise: Promise<void> = Promise.resolve();
 
 type PortObject = {postMessage: (message: Object) => void};
@@ -47,7 +46,7 @@ function releaseLock(obj: Object): void {
   lock.resolve(obj);
 }
 
-function waitForLock(): Promise<any> {
+function waitForLock() {
   if (lock == null) {
     // TODO: ???
     return Promise.reject(new Error(`???`));
@@ -63,7 +62,7 @@ function waitInQueue(fn: () => Promise<void>) {
 function handleMessage({id, message}: {id: number, message: MessageToSharedWorker}, port: PortObject) {
   if (message.type === `acquire-intent`) {
     const path: string = message.path;
-    const previous: ?string = message.previous;
+    const previous: string | undefined = message.previous;
     const debug: boolean = message.debug;
     waitInQueue(() => handleAcquireIntent(path, previous, debug, id, port));
   }
@@ -88,8 +87,8 @@ function handleMessage({id, message}: {id: number, message: MessageToSharedWorke
   }
 
   if (message.type === `release-intent`) {
-    const session: string = message.session;
-    const debug: bool = message.debug;
+    const session = message.session;
+    const debug = message.debug;
     waitInQueue(() => handleReleaseIntent(session, debug, id, port));
   }
   if (message.type === `release-done`) {
@@ -111,6 +110,7 @@ function handleEnumerateIntent(
   sendBack({type: `ok`}, id, port);
 
   // if lock times out, promise rejects and queue goes on
+  // @ts-ignore
   return waitForLock().then((obj: {id: number}) => {
     sendBack({type: `ok`}, obj.id, port);
   });
@@ -125,7 +125,7 @@ function handleReleaseDone(
 function handleReleaseOnClose(
   session: string,
 ): Promise<void> {
-  let path_: ?string = null;
+  let path_: string | null = null;
   Object.keys(normalSessions).forEach(kpath => {
     if (normalSessions[kpath] === session) {
       path_ = kpath;
@@ -147,7 +147,7 @@ function handleReleaseIntent(
   id: number,
   port: PortObject
 ): Promise<void> {
-  let path_: ?string = null;
+  let path_: string | null = null;
   const sessions = debug ? debugSessions : normalSessions;
   const otherSessions = (!debug) ? debugSessions : normalSessions;
   Object.keys(sessions).forEach(kpath => {
@@ -168,6 +168,7 @@ function handleReleaseIntent(
   sendBack({type: `path`, path, otherSession}, id, port);
 
   // if lock times out, promise rejects and queue goes on
+  // @ts-ignore
   return waitForLock().then((obj: {id: number}) => {
     // failure => nothing happens, but still has to reply "ok"
     delete sessions[path];
@@ -178,7 +179,7 @@ function handleReleaseIntent(
 function handleGetSessions(
   id: number,
   port: PortObject,
-  devices: ?Array<TrezorDeviceInfoDebug>
+  devices?: Array<TrezorDeviceInfoDebug>
 ): Promise<void> {
   if (devices != null) {
     const connected: {[path: string]: boolean} = {};
@@ -213,10 +214,10 @@ function handleAcquireFailed(
 
 function handleAcquireIntent(
   path: string,
-  previous: ?string,
-  debug: boolean,
-  id: number,
-  port: PortObject
+  previous?: string,
+  debug?: boolean,
+  id?: number,
+  port?: PortObject
 ): Promise<void> {
   let error = false;
   const thisTable = debug ? debugSessions : normalSessions;
@@ -235,6 +236,7 @@ function handleAcquireIntent(
     startLock();
     sendBack({type: `other-session`, otherSession: otherTable[path]}, id, port);
     // if lock times out, promise rejects and queue goes on
+  // @ts-ignore
     return waitForLock().then((obj: {good: boolean, id: number}) => {
       if (obj.good) {
         lastSession++;

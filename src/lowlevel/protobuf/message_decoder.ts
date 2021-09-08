@@ -9,12 +9,12 @@ import * as ProtoBuf from "protobufjs-old-fixed-webpack";
 const ByteBuffer = ProtoBuf.ByteBuffer;
 const Long = ProtoBuf.Long;
 
-import {Messages} from "./messages.js";
+import {Messages} from "./messages";
 
 class MessageInfo {
-  messageConstructor: ProtoBuf.Builder.Message;
+  messageConstructor: any;
   name: string;
-  constructor(messageConstructor: ProtoBuf.Builder.Message, name: string) {
+  constructor(messageConstructor: any, name: string) {
     this.messageConstructor = messageConstructor;
     this.name = name;
   }
@@ -45,19 +45,19 @@ export class MessageDecoder {
   }
 
   // Returns the name of the message
-  messageName() : string {
+  messageName() {
     return this._messageInfo().name;
   }
 
   // Returns the actual decoded message, as a ProtoBuf.js object
-  _decodedMessage() : ProtoBuf.Builder.Message {
+  _decodedMessage() {
     const constructor = this._messageInfo().messageConstructor;
     return constructor.decode(this.data);
   }
 
   // Returns the message decoded to JSON, that could be handed back
   // to trezor.js
-  decodedJSON() : Object {
+  decodedJSON() {
     const decoded = this._decodedMessage();
     const converted = messageToJSON(decoded);
 
@@ -66,7 +66,7 @@ export class MessageDecoder {
 }
 
 // Converts any ProtoBuf message to JSON in Trezor.js-friendly format
-export function messageToJSON(message: ProtoBuf.Builder.Message) : Object {
+export function messageToJSON(message: any) {
   const res = {};
   const meta = message.$type;
 

@@ -1,5 +1,3 @@
-/* @flow */
-
 export type Defered<T> = {
   promise: Promise<T>;
   resolve: (t: T) => void;
@@ -9,9 +7,9 @@ export type Defered<T> = {
 
 export function create<T>(): Defered<T> {
   let localResolve: (t: T) => void = (t: T) => {};
-  let localReject: (e?: ?Error) => void = (e) => {};
+  let localReject: (e?: Error) => void = (e) => {};
 
-  const promise = new Promise((resolve, reject) => {
+  const promise = new Promise<T>((resolve, reject) => {
     localResolve = resolve;
     localReject = reject;
   });

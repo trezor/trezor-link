@@ -1,10 +1,8 @@
-/* @flow */
-
 // input checks for high-level transports
 
-import type {TrezorDeviceInfoWithSession, MessageFromTrezor} from './transport';
+import type { TrezorDeviceInfoWithSession, MessageFromTrezor } from './transport';
 
-export function info(res: mixed): {version: string, configured: boolean} {
+export function info(res: any): { version: string, configured: boolean } {
   if (typeof res !== `object` || res == null) {
     throw new Error(`Wrong result type.`);
   }
@@ -13,17 +11,17 @@ export function info(res: mixed): {version: string, configured: boolean} {
     throw new Error(`Wrong result type.`);
   }
   const configured = !!(res.configured);
-  return {version, configured};
+  return { version, configured };
 }
 
-export function version(version: mixed): string {
+export function version(version: any): string {
   if (typeof version !== `string`) {
     throw new Error(`Wrong result type.`);
   }
   return version.trim();
 }
 
-function convertSession(r: mixed): ?string {
+function convertSession(r: any) {
   if (r == null) {
     return null;
   }
@@ -33,14 +31,14 @@ function convertSession(r: mixed): ?string {
   return r;
 }
 
-export function devices(res: mixed): Array<TrezorDeviceInfoWithSession> {
+export function devices(res: any): Array<TrezorDeviceInfoWithSession> {
   if (typeof res !== `object`) {
     throw new Error(`Wrong result type.`);
   }
   if (!(res instanceof Array)) {
     throw new Error(`Wrong result type.`);
   }
-  return res.map((o: mixed): TrezorDeviceInfoWithSession => {
+  return res.map((o: any): TrezorDeviceInfoWithSession => {
     if (typeof o !== `object` || o == null) {
       throw new Error(`Wrong result type.`);
     }
@@ -53,6 +51,7 @@ export function devices(res: mixed): Array<TrezorDeviceInfoWithSession> {
       path: pathS,
       session: convertSession(o.session),
       debugSession: convertSession(o.debugSession),
+      // @ts-ignore
       product: o.product,
       vendor: o.vendor,
       debug: !!o.debug,
@@ -60,7 +59,7 @@ export function devices(res: mixed): Array<TrezorDeviceInfoWithSession> {
   });
 }
 
-export function acquire(res: mixed): string {
+export function acquire(res: any): string {
   if (typeof res !== `object` || res == null) {
     throw new Error(`Wrong result type.`);
   }
@@ -71,7 +70,7 @@ export function acquire(res: mixed): string {
   return session.toString();
 }
 
-export function call(res: mixed): MessageFromTrezor {
+export function call(res: any): MessageFromTrezor {
   if (typeof res !== `object` || res == null) {
     throw new Error(`Wrong result type.`);
   }
@@ -83,6 +82,6 @@ export function call(res: mixed): MessageFromTrezor {
   if (typeof message !== `object` || message == null) {
     throw new Error(`Wrong result type.`);
   }
-  return {type, message};
+  return { type, message };
 }
 

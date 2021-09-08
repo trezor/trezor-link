@@ -1,10 +1,6 @@
-/* @flow */
-
 declare var __VERSION__: string;
 
-import EventEmitter from 'events';
-
-import {debugInOut} from '../debug-decorator';
+import {EventEmitter} from 'events';
 
 type TrezorDeviceInfoDebug = {path: string, debug: boolean};
 
@@ -26,12 +22,15 @@ const ENDPOINT_ID = 1;
 const DEBUG_INTERFACE_ID = 1;
 const DEBUG_ENDPOINT_ID = 2;
 
+type USBDevice = any;
+
 export default class WebUsbPlugin {
   name: string = `WebUsbPlugin`;
 
   version: string = __VERSION__;
   debug: boolean = false;
 
+  // @ts-ignore
   usb: USB;
 
   allowsWriteAndEnumerate: boolean = true;
@@ -46,10 +45,9 @@ export default class WebUsbPlugin {
 
   unreadableHidDeviceChange: EventEmitter = new EventEmitter();
 
-  @debugInOut
-  async init(debug: ?boolean): Promise<void> {
+  async init(debug?: boolean): Promise<void> {
     this.debug = !!debug;
-    // $FlowIssue
+    // @ts-ignore
     const usb = navigator.usb;
     if (usb == null) {
       throw new Error(`WebUSB is not available on this browser.`);
@@ -159,11 +157,10 @@ export default class WebUsbPlugin {
     }
   }
 
-  @debugInOut
   async connect(path: string, debug: boolean, first: boolean): Promise<void> {
     for (let i = 0; i < 5; i++) {
       if (i > 0) {
-        await new Promise((resolve) => setTimeout(() => resolve(), i * 200));
+        await new Promise((resolve) => setTimeout(() => resolve(undefined), i * 200));
       }
       try {
         return await this._connectIn(path, debug, first);
@@ -194,7 +191,6 @@ export default class WebUsbPlugin {
     await device.claimInterface(interfaceId);
   }
 
-  @debugInOut
   async disconnect(path: string, debug: boolean, last: boolean): Promise<void> {
     const device: USBDevice = await this._findDevice(path);
 

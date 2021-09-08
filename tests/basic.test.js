@@ -5,8 +5,8 @@ const messageToJSONNew = require('../src/lowlevel/protobuf/message_decoder-new')
 const patchOld = require('../src/lowlevel/protobuf/monkey_patch').patch;
 const patchNew = require('../src/lowlevel/protobuf/monkey_patch-new').patch;
 
-import * as ProtoBufOld from "protobufjs-old-fixed-webpack";
-import * as ProtoBufNew from "protobufjs";
+const ProtoBufOld = require("protobufjs-old-fixed-webpack");
+const ProtoBufNew = require("protobufjs");
 
 patchOld();
 
@@ -237,7 +237,7 @@ describe('primitives encode/decode using old/new lib', () => {
             const MessageNew = MessagesNew.lookup(`messages.${f.name}`);
 
             test('old way', async () => {
-                // serialize old way - this is to confirm fixtures match old behavior
+            // serialize old way - this is to confirm fixtures match old behavior
                 const messageOld = new MessageOld(f.params);
                 const encodedOld = messageOld.encodeAB();
                 expect(Buffer.from(encodedOld).toString('hex')).toEqual(f.encoded);

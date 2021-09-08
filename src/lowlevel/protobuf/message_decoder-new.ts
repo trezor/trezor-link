@@ -1,9 +1,7 @@
-"use strict";
 import { Enum } from 'protobufjs';
-import Long from 'long';
 
-
-const transform = (field, value) => {
+// todo:
+const transform = (field: any, value: any) => {
   if (field.type === 'bytes') {
     return value.toString('hex');
   } else if (field.long) {
@@ -15,17 +13,16 @@ const transform = (field, value) => {
 
 const primitiveTypes = [
   'string', 'boolean', 'uint32', 'uint64', 'sint32', 'sint64', 'bool', 'bytes',
-]
+];
+
 /*
   Legacy outbound middleware
 */
-export function messageToJSON(input) {
-  debugger;
+export function messageToJSON(input: any) {
   const { $type, ...message } = input;
   const res = {};
 
   for (const key in $type.fields) {
-    
     const field = $type.fields[key];
     const value = message[key];
     if (primitiveTypes.includes(field.type)) {
@@ -39,7 +36,6 @@ export function messageToJSON(input) {
 
     else if (field.resolvedType instanceof Enum) {
       if (field.repeated) {
-        // res[key] = value.map((v, i) => field.resolvedType.valuesById[v]);
         res[key] = value.map((v, i) => v);
       } else {
         res[key] = field.resolvedType.valuesById[value];

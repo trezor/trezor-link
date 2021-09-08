@@ -2,7 +2,7 @@
 'use strict';
 
 export type HttpRequestOptions = {
-    body?: ?(Array<any> | Object | string);
+    body?: Array<any> | Object | string;
     url: string;
     method: 'POST' | 'GET';
     skipContentTypeHeader?: boolean;
@@ -10,7 +10,7 @@ export type HttpRequestOptions = {
 
 // slight hack to make Flow happy, but to allow Node to set its own fetch
 // Request, RequestOptions and Response are built-in types of Flow for fetch API
-let _fetch: (input: string | Request, init?: RequestOptions) => Promise<Response> =
+let _fetch: (input: string | Request, init?: any) => Promise<Response> =
   typeof window === `undefined`
     ? () => Promise.reject()
     : window.fetch;
@@ -33,7 +33,7 @@ function contentType(body: any): string {
   }
 }
 
-function wrapBody(body: any): ?string {
+function wrapBody(body: any) {
   if (typeof body === `string`) {
     return body;
   } else {
@@ -41,7 +41,7 @@ function wrapBody(body: any): ?string {
   }
 }
 
-function parseResult(text: string): mixed {
+function parseResult(text: string) {
   try {
     return JSON.parse(text);
   } catch (e) {
@@ -49,7 +49,7 @@ function parseResult(text: string): mixed {
   }
 }
 
-export async function request(options: HttpRequestOptions): Promise<mixed> {
+export async function request(options: HttpRequestOptions) {
   const fetchOptions = {
     method: options.method,
     body: wrapBody(options.body),
@@ -78,7 +78,7 @@ export async function request(options: HttpRequestOptions): Promise<mixed> {
   if (res.ok) {
     return parseResult(resText);
   } else {
-    const resJson: mixed = parseResult(resText);
+    const resJson = parseResult(resText);
     if (typeof resJson === `object` && resJson != null && resJson.error != null) {
       throw new Error(resJson.error);
     } else {

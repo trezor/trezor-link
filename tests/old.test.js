@@ -1,4 +1,4 @@
-const parseConfigure = require('../src/lowlevel/protobuf/parse_protocol').parseConfigure
+const parseConfigure = require('../src/lowlevel/protobuf/parse_protocol').parseConfigure;
 const buildOne = require('../src/lowlevel/send').buildOne;
 const receiveOne = require('../src/lowlevel/receive').receiveOne;
 const patch = require('../src/lowlevel/protobuf/monkey_patch').patch;
@@ -44,7 +44,6 @@ const failingOnDecode = [
     'GetOwnershipId',
 ];
 
-
 describe('encoding json -> protobuf', () => {
     fixtures
         // .filter(f => f.name === 'EthereumSignTx') // for debug
@@ -64,5 +63,5 @@ describe('encoding json -> protobuf', () => {
                   expect(decodedMessage.message).toEqual(f.params);
                 }
             });
-        })
+        });
 })

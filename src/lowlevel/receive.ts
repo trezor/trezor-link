@@ -1,12 +1,10 @@
-/* @flow */
-
 // Logic of recieving data from trezor
 // Logic of "call" is broken to two parts - sending and receiving
 
-// import { MessageDecoder } from "./protobuf/message_decoder.js";
-import { messageToJSON } from "./protobuf/message_decoder-new.js";
-
-import ByteBuffer from "bytebuffer";
+import {MessageDecoder} from "./protobuf/message_decoder";
+import {ByteBuffer} from "protobufjs-old-fixed-webpack";
+import type {Messages} from "./protobuf/messages";
+import type {MessageFromTrezor} from "../transport";
 
 const MESSAGE_HEADER_BYTE: number = 0x23;
 
@@ -27,7 +25,7 @@ class PartiallyParsedInput {
   isDone(): boolean {
     return (this.buffer.offset >= this.expectedLength);
   }
-  append(buffer: ByteBuffer): void {
+  append(buffer: ByteBuffer):void {
     this.buffer.append(buffer);
   }
   arrayBuffer(): ArrayBuffer {
@@ -96,36 +94,28 @@ export function receiveOne(
 ): MessageFromTrezor {
 
   const byteBuffer: ByteBuffer = ByteBuffer.concat([data]);
-
   const typeId: number = byteBuffer.readUint16();
-
-  const messageTypes = messages.nested.hw.nested.trezor.nested.messages.nested.MessageType.values;
-  const messageType = Object.keys(messageTypes).find(type => {
-    return messageTypes[type] === typeId;
-  }).replace('MessageType_', '');
-
-  const accessor = `hw.trezor.messages.${messageType}`
-  const Message = messages.lookupType(accessor);
-
   byteBuffer.readUint32(); // length, ignoring
+  
 
+  const decoder: MessageDecoder = new MessageDecoder(messages, typeId, byteBuffer.toArrayBuffer());
   return {
-    message: messageToJSON(Message.decode(byteBuffer.toBuffer())),
-    type: messageType,
-  }
+    message: decoder.decodedJSON(),
+    type: decoder.messageName(),
+  };
 }
 
 // Reads data from device and returns decoded message, that can be sent back to trezor.js
-// export async function receiveAndParse(
-//   messages: Messages,
-//   receiver: () => Promise<ArrayBuffer>
-// ): Promise<MessageFromTrezor> {
-//   const received = await receiveBuffer(receiver);
-//   const typeId: number = received.typeNumber;
-//   const buffer: ArrayBuffer = received.arrayBuffer();
-//   const decoder: MessageDecoder = new MessageDecoder(messages, typeId, buffer);
-//   return {
-//     message: decoder.decodedJSON(),
-//     type: decoder.messageName(),
-//   };
-// }
+export async function receiveAndParse(
+  messages: Messages,
+  receiver: () => Promise<ArrayBuffer>
+): Promise<MessageFromTrezor> {
+  const received = await receiveBuffer(receiver);
+  const typeId: number = received.typeNumber;
+  const buffer: ArrayBuffer = received.arrayBuffer();
+  const decoder: MessageDecoder = new MessageDecoder(messages, typeId, buffer);
+  return {
+    message: decoder.decodedJSON(),
+    type: decoder.messageName(),
+  };
+}
