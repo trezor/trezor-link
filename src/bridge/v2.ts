@@ -2,17 +2,15 @@
 // however, it is not doing actual sending in/to the devices
 // and it refers enumerate to bridge
 
-'use strict';
+import semvercmp from "semver-compare";
+import { request as http, setFetch as rSetFetch } from "./http";
+import type { AcquireInput, TrezorDeviceInfoWithSession } from "../transport";
+import * as check from "../highlevel-checks";
 
-import semvercmp from 'semver-compare';
-import { request as http, setFetch as rSetFetch } from './http';
-import type { AcquireInput, TrezorDeviceInfoWithSession } from '../transport';
-import * as check from '../highlevel-checks';
-
-import { buildOne } from '../lowlevel/send';
-import type { Messages } from '../lowlevel/protobuf/messages';
-import { parseConfigure } from '../lowlevel/protobuf/parse_protocol';
-import { receiveOne } from '../lowlevel/receive';
+import { buildOne } from "../lowlevel/send";
+import type { Messages } from "../lowlevel/protobuf/messages";
+import { parseConfigure } from "../lowlevel/protobuf/parse_protocol";
+import { receiveOne } from "../lowlevel/receive";
 
 const DEFAULT_URL = `http://127.0.0.1:21325`;
 const DEFAULT_VERSION_URL = `https://wallet.trezor.io/data/bridge/latest.txt`;
@@ -23,30 +21,36 @@ type IncompleteRequestOptions = {
 };
 
 export default class BridgeTransport {
-  name: string = `BridgeTransport`;
-  version: string = ``;
+  name = `BridgeTransport`;
+  version = ``;
   isOutdated: boolean;
 
   url: string;
   newestVersionUrl: string;
   bridgeVersion: string;
-  debug: boolean = false;
+  debug = false;
 
-  configured: boolean = false;
+  configured = false;
   _messages: Messages | undefined;
 
-  stopped: boolean = false;
+  stopped = false;
 
   constructor(url?: string, newestVersionUrl?: string) {
     this.url = url == null ? DEFAULT_URL : url;
-    this.newestVersionUrl = newestVersionUrl == null ? DEFAULT_VERSION_URL : newestVersionUrl;
+    this.newestVersionUrl =
+      newestVersionUrl == null ? DEFAULT_VERSION_URL : newestVersionUrl;
   }
 
   async _post(options: IncompleteRequestOptions) {
     if (this.stopped) {
       return Promise.reject(`Transport stopped.`);
     }
-    return await http({ ...options, method: `POST`, url: this.url + options.url, skipContentTypeHeader: true });
+    return await http({
+      ...options,
+      method: `POST`,
+      url: this.url + options.url,
+      skipContentTypeHeader: true,
+    });
   }
 
   async init(debug: boolean): Promise<void> {
@@ -61,10 +65,15 @@ export default class BridgeTransport {
     });
     const info = check.info(infoS);
     this.version = info.version;
-    const newVersion = typeof this.bridgeVersion === `string` ? this.bridgeVersion : check.version(await http({
-      url: `${this.newestVersionUrl}?${Date.now()}`,
-      method: `GET`,
-    }));
+    const newVersion =
+      typeof this.bridgeVersion === `string`
+        ? this.bridgeVersion
+        : check.version(
+            await http({
+              url: `${this.newestVersionUrl}?${Date.now()}`,
+              method: `GET`,
+            })
+          );
     this.isOutdated = semvercmp(this.version, newVersion) < 0;
   }
 
@@ -74,7 +83,9 @@ export default class BridgeTransport {
     this._messages = messages;
   }
 
-  async listen(old?: Array<TrezorDeviceInfoWithSession>): Promise<Array<TrezorDeviceInfoWithSession>> {
+  async listen(
+    old?: Array<TrezorDeviceInfoWithSession>
+  ): Promise<Array<TrezorDeviceInfoWithSession>> {
     if (old == null) {
       throw new Error(`Bridge v2 does not support listen without previous.`);
     }
@@ -94,8 +105,10 @@ export default class BridgeTransport {
 
   async _acquireMixed(input: AcquireInput, debugLink: boolean) {
     const previousStr = input.previous == null ? `null` : input.previous;
-    const url = (debugLink ? `/debug` : ``) + `/acquire/` + input.path + `/` + previousStr;
-    return this._post({ url: url });
+    const url = `${debugLink ? `/debug` : ``}/acquire/${
+      input.path
+    }/${previousStr}`;
+    return this._post({ url });
   }
 
   async acquire(input: AcquireInput, debugLink: boolean) {
@@ -104,7 +117,9 @@ export default class BridgeTransport {
   }
 
   async release(session: string, onclose: boolean, debugLink: boolean) {
-    const res = this._post({ url: (debugLink ? `/debug` : ``) + `/release/` + session });
+    const res = this._post({
+      url: `${debugLink ? `/debug` : ``}/release/${session}`,
+    });
     if (onclose) {
       return;
     }
@@ -118,7 +133,7 @@ export default class BridgeTransport {
     const messages = this._messages;
     const outData = buildOne(messages, name, data).toString(`hex`);
     const resData = await this._post({
-      url: (debugLink ? `/debug` : ``) + `/call/` + session,
+      url: `${debugLink ? `/debug` : ``}/call/${session}`,
       body: outData,
     });
     if (typeof resData !== `string`) {
@@ -135,10 +150,9 @@ export default class BridgeTransport {
     const messages = this._messages;
     const outData = buildOne(messages, name, data).toString(`hex`);
     await this._post({
-      url: (debugLink ? `/debug` : ``) + `/post/` + session,
+      url: `${debugLink ? `/debug` : ``}/post/${session}`,
       body: outData,
     });
-    return;
   }
 
   async read(session: string, debugLink: boolean) {
@@ -147,7 +161,7 @@ export default class BridgeTransport {
     }
     const messages = this._messages;
     const resData = await this._post({
-      url: (debugLink ? `/debug` : ``) + `/read/` + session,
+      url: `${debugLink ? `/debug` : ``}/read/${session}`,
     });
     if (typeof resData !== `string`) {
       throw new Error(`Returning data is not string.`);
@@ -164,7 +178,7 @@ export default class BridgeTransport {
     return Promise.reject();
   }
 
-  requestNeeded: boolean = false;
+  requestNeeded = false;
 
   setBridgeLatestUrl(url: string): void {
     this.newestVersionUrl = url;

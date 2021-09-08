@@ -10,7 +10,7 @@ export class Messages {
     this.messagesByName = messages;
 
     const messagesByType: any = {};
-    Object.keys(messages.MessageType).forEach(longName => {
+    Object.keys(messages.MessageType).forEach((longName) => {
       const typeId = messages.MessageType[longName];
 
       let shortName = longName.split(`_`)[1];
@@ -30,4 +30,3 @@ export class Messages {
     this.messageTypes = messages.MessageType;
   }
 }
-

@@ -1,12 +1,12 @@
 // Logic of recieving data from trezor
 // Logic of "call" is broken to two parts - sending and receiving
 
-import {MessageDecoder} from "./protobuf/message_decoder";
-import {ByteBuffer} from "protobufjs-old-fixed-webpack";
-import type {Messages} from "./protobuf/messages";
-import type {MessageFromTrezor} from "../transport";
+import { MessageDecoder } from "./protobuf/message_decoder";
+import { ByteBuffer } from "protobufjs-old-fixed-webpack";
+import type { Messages } from "./protobuf/messages";
+import type { MessageFromTrezor } from "../transport";
 
-const MESSAGE_HEADER_BYTE: number = 0x23;
+const MESSAGE_HEADER_BYTE = 0x23;
 
 // input that might or might not be fully parsed yet
 class PartiallyParsedInput {
@@ -23,9 +23,9 @@ class PartiallyParsedInput {
     this.buffer = new ByteBuffer(length);
   }
   isDone(): boolean {
-    return (this.buffer.offset >= this.expectedLength);
+    return this.buffer.offset >= this.expectedLength;
   }
-  append(buffer: ByteBuffer):void {
+  append(buffer: ByteBuffer): void {
     this.buffer.append(buffer);
   }
   arrayBuffer(): ArrayBuffer {
@@ -92,13 +92,15 @@ export function receiveOne(
   messages: Messages,
   data: Buffer
 ): MessageFromTrezor {
-
   const byteBuffer: ByteBuffer = ByteBuffer.concat([data]);
   const typeId: number = byteBuffer.readUint16();
   byteBuffer.readUint32(); // length, ignoring
-  
 
-  const decoder: MessageDecoder = new MessageDecoder(messages, typeId, byteBuffer.toArrayBuffer());
+  const decoder: MessageDecoder = new MessageDecoder(
+    messages,
+    typeId,
+    byteBuffer.toArrayBuffer()
+  );
   return {
     message: decoder.decodedJSON(),
     type: decoder.messageName(),

@@ -1,6 +1,6 @@
 import * as ProtoBuf from "protobufjs-old-fixed-webpack";
 
-const ByteBuffer = ProtoBuf.ByteBuffer;
+const { ByteBuffer } = ProtoBuf;
 
 let patched = false;
 
@@ -10,14 +10,18 @@ let patched = false;
 export function patch() {
   if (!patched) {
     // @ts-ignore
-    ProtoBuf.Reflect.Message.Field.prototype.verifyValueOriginal = ProtoBuf.Reflect.Message.Field.prototype.verifyValue;
+    ProtoBuf.Reflect.Message.Field.prototype.verifyValueOriginal =
+      ProtoBuf.Reflect.Message.Field.prototype.verifyValue;
 
     // note: don't rewrite this function to arrow (value, skipRepeated) => ....
     // since I need `this` from the original context
     // @ts-ignore
-    ProtoBuf.Reflect.Message.Field.prototype.verifyValue = function (value, skipRepeated) {
+    ProtoBuf.Reflect.Message.Field.prototype.verifyValue = function (
+      value,
+      skipRepeated
+    ) {
       let newValue = value;
-      if (this.type === ProtoBuf.TYPES[`bytes`]) {
+      if (this.type === ProtoBuf.TYPES.bytes) {
         if (value != null) {
           if (typeof value === `string`) {
             // @ts-ignore

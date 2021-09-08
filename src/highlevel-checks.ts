@@ -1,16 +1,19 @@
 // input checks for high-level transports
 
-import type { TrezorDeviceInfoWithSession, MessageFromTrezor } from './transport';
+import type {
+  TrezorDeviceInfoWithSession,
+  MessageFromTrezor,
+} from "./transport";
 
-export function info(res: any): { version: string, configured: boolean } {
+export function info(res: any): { version: string; configured: boolean } {
   if (typeof res !== `object` || res == null) {
     throw new Error(`Wrong result type.`);
   }
-  const version = res.version;
+  const { version } = res;
   if (typeof version !== `string`) {
     throw new Error(`Wrong result type.`);
   }
-  const configured = !!(res.configured);
+  const configured = !!res.configured;
   return { version, configured };
 }
 
@@ -42,7 +45,7 @@ export function devices(res: any): Array<TrezorDeviceInfoWithSession> {
     if (typeof o !== `object` || o == null) {
       throw new Error(`Wrong result type.`);
     }
-    const path = o.path;
+    const { path } = o;
     if (typeof path !== `string`) {
       throw new Error(`Wrong result type.`);
     }
@@ -63,7 +66,7 @@ export function acquire(res: any): string {
   if (typeof res !== `object` || res == null) {
     throw new Error(`Wrong result type.`);
   }
-  const session = res.session;
+  const { session } = res;
   if (typeof session !== `string` && typeof session !== `number`) {
     throw new Error(`Wrong result type.`);
   }
@@ -74,14 +77,13 @@ export function call(res: any): MessageFromTrezor {
   if (typeof res !== `object` || res == null) {
     throw new Error(`Wrong result type.`);
   }
-  const type = res.type;
+  const { type } = res;
   if (typeof type !== `string`) {
     throw new Error(`Wrong result type.`);
   }
-  const message = res.message;
+  const { message } = res;
   if (typeof message !== `object` || message == null) {
     throw new Error(`Wrong result type.`);
   }
   return { type, message };
 }
-

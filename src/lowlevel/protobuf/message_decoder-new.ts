@@ -1,18 +1,26 @@
-import { Enum } from 'protobufjs';
+import { Enum } from "protobufjs";
 
 // todo:
 const transform = (field: any, value: any) => {
-  if (field.type === 'bytes') {
-    return value.toString('hex');
-  } else if (field.long) {
+  if (field.type === "bytes") {
+    return value.toString("hex");
+  }
+  if (field.long) {
     return value.toNumber();
   }
 
   return value;
-}
+};
 
 const primitiveTypes = [
-  'string', 'boolean', 'uint32', 'uint64', 'sint32', 'sint64', 'bool', 'bytes',
+  "string",
+  "boolean",
+  "uint32",
+  "uint64",
+  "sint32",
+  "sint64",
+  "bool",
+  "bytes",
 ];
 
 /*
@@ -32,9 +40,7 @@ export function messageToJSON(input: any) {
         res[key] = transform(field, value);
       }
       continue;
-    }
-
-    else if (field.resolvedType instanceof Enum) {
+    } else if (field.resolvedType instanceof Enum) {
       if (field.repeated) {
         res[key] = value.map((v, i) => v);
       } else {
@@ -60,18 +66,15 @@ export function messageToJSON(input: any) {
         // if (i instanceof ByteBuffer) {
         //   return i.toHex();
         // }
-        if (typeof i === 'object') {
+        if (typeof i === "object") {
           return messageToJSON(i);
-        } else {
-          return i;
         }
+        return i;
       });
       res[key] = decodedArr;
-    }
-    else if (typeof value === 'object') {
+    } else if (typeof value === "object") {
       res[key] = messageToJSON(value);
-    }
-    else {
+    } else {
       res[key] = value;
     }
   }

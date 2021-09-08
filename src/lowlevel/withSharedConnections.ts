@@ -1,29 +1,36 @@
-import { patch } from './protobuf/monkey_patch';
+import { patch } from "./protobuf/monkey_patch";
+
+import { create as createDefered, resolveTimeoutPromise } from "../defered";
+import { parseConfigure } from "./protobuf/parse_protocol";
+import { buildAndSend } from "./send";
+import { receiveAndParse } from "./receive";
+
+import type {
+  LowlevelTransportSharedPlugin,
+  TrezorDeviceInfoDebug,
+} from "./sharedPlugin";
+import type { Defered } from "../defered";
+import type { Messages } from "./protobuf/messages";
+import type {
+  MessageFromTrezor,
+  TrezorDeviceInfoWithSession,
+  AcquireInput,
+} from "../transport";
+
+import { postModuleMessage } from "./sharedConnectionWorker";
+
 patch();
 
-import { create as createDefered } from '../defered';
-import { parseConfigure } from './protobuf/parse_protocol';
-import { buildAndSend } from './send';
-import { receiveAndParse } from './receive';
-import { resolveTimeoutPromise } from '../defered';
-
 // eslint-disable-next-line quotes
-const stringify = require('json-stable-stringify');
-
-import type { LowlevelTransportSharedPlugin, TrezorDeviceInfoDebug } from './sharedPlugin';
-import type { Defered } from '../defered';
-import type { Messages } from './protobuf/messages';
-import type { MessageFromTrezor, TrezorDeviceInfoWithSession, AcquireInput } from '../transport';
-
-import { postModuleMessage } from './sharedConnectionWorker';
+const stringify = require("json-stable-stringify");
 
 function stableStringify(devices?: Array<TrezorDeviceInfoWithSession>): string {
   if (devices == null) {
     return `null`;
   }
 
-  const pureDevices = devices.map(device => {
-    const path = device.path;
+  const pureDevices = devices.map((device) => {
+    const { path } = device;
     const session = device.session == null ? null : device.session;
     return { path, session };
   });
@@ -31,73 +38,92 @@ function stableStringify(devices?: Array<TrezorDeviceInfoWithSession>): string {
   return stringify(pureDevices);
 }
 
-function compare(a: TrezorDeviceInfoWithSession, b: TrezorDeviceInfoWithSession): number {
+function compare(
+  a: TrezorDeviceInfoWithSession,
+  b: TrezorDeviceInfoWithSession
+): number {
   if (!isNaN(parseInt(a.path))) {
     return parseInt(a.path) - parseInt(b.path);
-  } else {
-    return a.path < b.path ? -1 : (a.path > b.path ? 1 : 0);
   }
+  return a.path < b.path ? -1 : a.path > b.path ? 1 : 0;
 }
 
 const ITER_MAX = 60;
 const ITER_DELAY = 500;
 
-export type MessageToSharedWorker = {
-  type: 'acquire-intent',
-  path: string,
-  previous?: string,
-  debug: boolean
-} | {
-  type: 'acquire-done',
-} | {
-  type: 'acquire-failed',
-} | {
-  type: 'get-sessions',
-} | {
-  type: 'get-sessions-and-disconnect',
-  devices: Array<TrezorDeviceInfoDebug>
-} | {
-  type: 'release-intent',
-  session: string,
-  debug: boolean
-} | {
-  type: 'release-onclose',
-  session: string,
-} | {
-  type: 'release-done',
-} | {
-  type: 'enumerate-intent',
-} | {
-  type: 'enumerate-done',
-};
+export type MessageToSharedWorker =
+  | {
+      type: "acquire-intent";
+      path: string;
+      previous?: string;
+      debug: boolean;
+    }
+  | {
+      type: "acquire-done";
+    }
+  | {
+      type: "acquire-failed";
+    }
+  | {
+      type: "get-sessions";
+    }
+  | {
+      type: "get-sessions-and-disconnect";
+      devices: Array<TrezorDeviceInfoDebug>;
+    }
+  | {
+      type: "release-intent";
+      session: string;
+      debug: boolean;
+    }
+  | {
+      type: "release-onclose";
+      session: string;
+    }
+  | {
+      type: "release-done";
+    }
+  | {
+      type: "enumerate-intent";
+    }
+  | {
+      type: "enumerate-done";
+    };
 
-export type MessageFromSharedWorker = {
-  type: 'ok'
-} | {
-  type: 'wrong-previous-session'
-} | {
-  type: 'double-release'
-} | {
-  type: 'sessions',
-  debugSessions: { [path: string]: string };
-  normalSessions: { [path: string]: string };
-} | {
-  type: 'session-number',
-  number: string
-} | {
-  type: 'path',
-  path: string;
-  otherSession?: string,
-} | {
-  type: 'other-session',
-  otherSession?: string,
-};
+export type MessageFromSharedWorker =
+  | {
+      type: "ok";
+    }
+  | {
+      type: "wrong-previous-session";
+    }
+  | {
+      type: "double-release";
+    }
+  | {
+      type: "sessions";
+      debugSessions: { [path: string]: string };
+      normalSessions: { [path: string]: string };
+    }
+  | {
+      type: "session-number";
+      number: string;
+    }
+  | {
+      type: "path";
+      path: string;
+      otherSession?: string;
+    }
+  | {
+      type: "other-session";
+      otherSession?: string;
+    };
 
 export default class LowlevelTransportWithSharedConnections {
-  name: string = `LowlevelTransportWithSharedConnections`;
+  name = `LowlevelTransportWithSharedConnections`;
 
   plugin: LowlevelTransportSharedPlugin;
-  debug: boolean = false;
+  debug = false;
 
   // path => promise rejecting on release
   deferedDebugOnRelease: { [session: string]: Defered<void> } = {};
@@ -105,20 +131,25 @@ export default class LowlevelTransportWithSharedConnections {
 
   _messages: undefined | Messages;
   version: string;
-  configured: boolean = false;
+  configured = false;
 
   _sharedWorkerFactory: undefined | (() => SharedWorker);
   sharedWorker: undefined | SharedWorker;
 
-  stopped: boolean = false;
+  stopped = false;
 
-  constructor(plugin: LowlevelTransportSharedPlugin, sharedWorkerFactory: undefined | (() => SharedWorker)) {
+  constructor(
+    plugin: LowlevelTransportSharedPlugin,
+    sharedWorkerFactory: undefined | (() => SharedWorker)
+  ) {
     this.plugin = plugin;
     this.version = plugin.version;
     this._sharedWorkerFactory = sharedWorkerFactory;
     if (!this.plugin.allowsWriteAndEnumerate) {
       // This should never happen anyway
-      throw new Error(`Plugin with shared connections cannot disallow write and enumerate`);
+      throw new Error(
+        `Plugin with shared connections cannot disallow write and enumerate`
+      );
     }
   }
 
@@ -135,21 +166,24 @@ export default class LowlevelTransportWithSharedConnections {
       await this.sendToWorker({ type: `enumerate-done` });
     }
 
-    const sessionsM = await this.sendToWorker({ type: `get-sessions-and-disconnect`, devices });
+    const sessionsM = await this.sendToWorker({
+      type: `get-sessions-and-disconnect`,
+      devices,
+    });
     if (sessionsM.type !== `sessions`) {
       throw new Error(`Wrong reply`);
     }
-    const debugSessions = sessionsM.debugSessions;
-    const normalSessions = sessionsM.normalSessions;
+    const { debugSessions } = sessionsM;
+    const { normalSessions } = sessionsM;
 
-    const devicesWithSessions = devices.map(device => {
+    const devicesWithSessions = devices.map((device) => {
       const session = normalSessions[device.path];
       const debugSession = debugSessions[device.path];
       return {
         path: device.path,
-        session: session,
+        session,
         debug: device.debug,
-        debugSession: debugSession,
+        debugSession,
       };
     });
 
@@ -159,35 +193,40 @@ export default class LowlevelTransportWithSharedConnections {
 
   _releaseDisconnected(devices: Array<TrezorDeviceInfoWithSession>) {
     const connected: { [session: string]: boolean } = {};
-    devices.forEach(device => {
+    devices.forEach((device) => {
       if (device.session != null) {
         connected[device.session] = true;
       }
     });
-    Object.keys(this.deferedDebugOnRelease).forEach(session => {
+    Object.keys(this.deferedDebugOnRelease).forEach((session) => {
       if (connected[session] == null) {
         this._releaseCleanup(session, true);
       }
     });
-    Object.keys(this.deferedNormalOnRelease).forEach(session => {
+    Object.keys(this.deferedNormalOnRelease).forEach((session) => {
       if (connected[session] == null) {
         this._releaseCleanup(session, false);
       }
     });
   }
 
-  _lastStringified: string = ``;
+  _lastStringified = ``;
 
-  async listen(old: Array<TrezorDeviceInfoWithSession>): Promise<Array<TrezorDeviceInfoWithSession>> {
+  async listen(
+    old: Array<TrezorDeviceInfoWithSession>
+  ): Promise<Array<TrezorDeviceInfoWithSession>> {
     const oldStringified = stableStringify(old);
     const last = old == null ? this._lastStringified : oldStringified;
     return this._runIter(0, last);
   }
 
-  async _runIter(iteration: number, oldStringified: string): Promise<Array<TrezorDeviceInfoWithSession>> {
+  async _runIter(
+    iteration: number,
+    oldStringified: string
+  ): Promise<Array<TrezorDeviceInfoWithSession>> {
     const devices = await this._silentEnumerate();
     const stringified = stableStringify(devices);
-    if ((stringified !== oldStringified) || (iteration === ITER_MAX)) {
+    if (stringified !== oldStringified || iteration === ITER_MAX) {
       this._lastStringified = stringified;
       return devices;
     }
@@ -233,7 +272,11 @@ export default class LowlevelTransportWithSharedConnections {
     return session;
   }
 
-  async release(session: string, onclose: boolean, debugLink: boolean): Promise<void> {
+  async release(
+    session: string,
+    onclose: boolean,
+    debugLink: boolean
+  ): Promise<void> {
     if (onclose && !debugLink) {
       // if we wait for worker messages, shared worker survives
       // and delays closing
@@ -241,15 +284,19 @@ export default class LowlevelTransportWithSharedConnections {
       this.sendToWorker({ type: `release-onclose`, session });
       return;
     }
-    const messback = await this.sendToWorker({ type: `release-intent`, session, debug: debugLink });
+    const messback = await this.sendToWorker({
+      type: `release-intent`,
+      session,
+      debug: debugLink,
+    });
     if (messback.type === `double-release`) {
       throw new Error(`Trying to double release.`);
     }
     if (messback.type !== `path`) {
       throw new Error(`Strange reply.`);
     }
-    const path = messback.path;
-    const otherSession = messback.otherSession;
+    const { path } = messback;
+    const { otherSession } = messback;
     const last = otherSession == null;
 
     this._releaseCleanup(session, debugLink);
@@ -262,7 +309,9 @@ export default class LowlevelTransportWithSharedConnections {
   }
 
   _releaseCleanup(session: string, debugLink: boolean) {
-    const table = debugLink ? this.deferedDebugOnRelease : this.deferedNormalOnRelease;
+    const table = debugLink
+      ? this.deferedDebugOnRelease
+      : this.deferedNormalOnRelease;
     if (table[session] != null) {
       table[session].reject(new Error(`Device released or disconnected`));
       delete table[session];
@@ -275,7 +324,10 @@ export default class LowlevelTransportWithSharedConnections {
     this.configured = true;
   }
 
-  _sendLowlevel(path: string, debug: boolean): (data: ArrayBuffer) => Promise<void> {
+  _sendLowlevel(
+    path: string,
+    debug: boolean
+  ): (data: ArrayBuffer) => Promise<void> {
     return (data) => this.plugin.send(path, data, debug);
   }
 
@@ -290,15 +342,21 @@ export default class LowlevelTransportWithSharedConnections {
     return this._messages;
   }
 
-  async doWithSession<X>(session: string, debugLink: boolean, inside: (path: string) => Promise<X>): Promise<X> {
+  async doWithSession<X>(
+    session: string,
+    debugLink: boolean,
+    inside: (path: string) => Promise<X>
+  ): Promise<X> {
     const sessionsM = await this.sendToWorker({ type: `get-sessions` });
     if (sessionsM.type !== `sessions`) {
       throw new Error(`Wrong reply`);
     }
-    const sessionsMM = debugLink ? sessionsM.debugSessions : sessionsM.normalSessions;
+    const sessionsMM = debugLink
+      ? sessionsM.debugSessions
+      : sessionsM.normalSessions;
 
     let path_: string = null;
-    Object.keys(sessionsMM).forEach(kpath => {
+    Object.keys(sessionsMM).forEach((kpath) => {
       if (sessionsMM[kpath] === session) {
         path_ = kpath;
       }
@@ -318,30 +376,62 @@ export default class LowlevelTransportWithSharedConnections {
     return Promise.race([defered.rejectingPromise, resPromise]);
   }
 
-  async call(session: string, name: string, data: Object, debugLink: boolean): Promise<MessageFromTrezor> {
-    const callInside: (path: string) => Promise<MessageFromTrezor> = async (path: string) => {
+  async call(
+    session: string,
+    name: string,
+    data: Object,
+    debugLink: boolean
+  ): Promise<MessageFromTrezor> {
+    const callInside: (path: string) => Promise<MessageFromTrezor> = async (
+      path: string
+    ) => {
       const messages = this.messages();
-      await buildAndSend(messages, this._sendLowlevel(path, debugLink), name, data);
-      const message = await receiveAndParse(messages, this._receiveLowlevel(path, debugLink));
+      await buildAndSend(
+        messages,
+        this._sendLowlevel(path, debugLink),
+        name,
+        data
+      );
+      const message = await receiveAndParse(
+        messages,
+        this._receiveLowlevel(path, debugLink)
+      );
       return message;
     };
 
     return this.doWithSession(session, debugLink, callInside);
   }
 
-  async post(session: string, name: string, data: Object, debugLink: boolean): Promise<void> {
-    const callInside: (path: string) => Promise<void> = async (path: string) => {
+  async post(
+    session: string,
+    name: string,
+    data: Object,
+    debugLink: boolean
+  ): Promise<void> {
+    const callInside: (path: string) => Promise<void> = async (
+      path: string
+    ) => {
       const messages = this.messages();
-      await buildAndSend(messages, this._sendLowlevel(path, debugLink), name, data);
+      await buildAndSend(
+        messages,
+        this._sendLowlevel(path, debugLink),
+        name,
+        data
+      );
     };
 
     return this.doWithSession(session, debugLink, callInside);
   }
 
   async read(session: string, debugLink: boolean): Promise<MessageFromTrezor> {
-    const callInside: (path: string) => Promise<MessageFromTrezor> = async (path: string) => {
+    const callInside: (path: string) => Promise<MessageFromTrezor> = async (
+      path: string
+    ) => {
       const messages = this.messages();
-      const message = await receiveAndParse(messages, this._receiveLowlevel(path, debugLink));
+      const message = await receiveAndParse(
+        messages,
+        this._receiveLowlevel(path, debugLink)
+      );
       return message;
     };
 
@@ -368,11 +458,13 @@ export default class LowlevelTransportWithSharedConnections {
     return this.plugin.requestDevice();
   }
 
-  requestNeeded: boolean = false;
+  requestNeeded = false;
 
-  latestId: number = 0;
+  latestId = 0;
   defereds: { [id: number]: Defered<MessageFromSharedWorker> } = {};
-  sendToWorker(message: MessageToSharedWorker): Promise<MessageFromSharedWorker> {
+  sendToWorker(
+    message: MessageToSharedWorker
+  ): Promise<MessageFromSharedWorker> {
     if (this.stopped) {
       return Promise.reject(`Transport stopped.`);
     }
@@ -392,15 +484,15 @@ export default class LowlevelTransportWithSharedConnections {
     return this.defereds[id].promise;
   }
 
-  receiveFromWorker(m: { id: number, message: MessageFromSharedWorker }) {
+  receiveFromWorker(m: { id: number; message: MessageFromSharedWorker }) {
     this.defereds[m.id].resolve(m.message);
     delete this.defereds[m.id];
   }
 
-  setBridgeLatestUrl(url: string): void { }
-  setBridgeLatestVersion(version: string): void { }
+  setBridgeLatestUrl(url: string): void {}
+  setBridgeLatestVersion(version: string): void {}
 
-  isOutdated: boolean = false;
+  isOutdated = false;
 
   stop(): void {
     this.stopped = true;

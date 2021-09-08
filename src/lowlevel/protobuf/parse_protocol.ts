@@ -1,22 +1,28 @@
 // Module for loading the protobuf description from serialized description
 import * as ProtoBuf from "protobufjs-old-fixed-webpack";
 
-import {Messages} from "./messages";
+import { Messages } from "./messages";
 // import {protocolToJSON} from "./to_json.js";
 // import * as compiledConfigProto from "./config_proto_compiled.js";
 
 // Parse configure data (it has to be already verified)
 export function parseConfigure(data: JSON | string): Messages {
   // incoming data are in JSON format
-  if (data && typeof data === `object` && Object.prototype.hasOwnProperty.call(data, `messages`)) {
-    const protobufMessages = ProtoBuf.newBuilder({})[`import`](data).build();
+  if (
+    data &&
+    typeof data === `object` &&
+    Object.prototype.hasOwnProperty.call(data, `messages`)
+  ) {
+    const protobufMessages = ProtoBuf.newBuilder({}).import(data).build();
     return new Messages(protobufMessages);
   }
   if (typeof data !== `string`) throw new Error(`Unexpected messages format`);
   // incoming data are in JSON.stringify format
   if (data.match(/^\{.*\}$/)) {
-    const protobufMessages = ProtoBuf.newBuilder({})[`import`](JSON.parse(data)).build();
-    
+    const protobufMessages = ProtoBuf.newBuilder({})
+      .import(JSON.parse(data))
+      .build();
+
     return new Messages(protobufMessages);
   }
 
@@ -37,4 +43,3 @@ export function parseConfigure(data: JSON | string): Messages {
 
   // return new Messages(protobufMessages);
 }
-

@@ -1,15 +1,14 @@
 /* @flow */
 
-"use strict";
-
 // Helper module for converting Trezor's raw input to
 // ProtoBuf's message and from there to regular JSON to trezor.js
 
 import * as ProtoBuf from "protobufjs-old-fixed-webpack";
-const ByteBuffer = ProtoBuf.ByteBuffer;
-const Long = ProtoBuf.Long;
 
-import {Messages} from "./messages";
+import { Messages } from "./messages";
+
+const { ByteBuffer } = ProtoBuf;
+const { Long } = ProtoBuf;
 
 class MessageInfo {
   messageConstructor: any;
@@ -36,7 +35,7 @@ export class MessageDecoder {
 
   // Returns an info about this message,
   // which includes the constructor object and a name
-  _messageInfo() : MessageInfo {
+  _messageInfo(): MessageInfo {
     const r = this.messages.messagesByType[this.type];
     if (r == null) {
       throw new Error(`Method type not found - ${this.type}`);
@@ -96,9 +95,8 @@ export function messageToJSON(message: any) {
         // }
         if (typeof i === `object`) {
           return messageToJSON(i);
-        } else {
-          return i;
         }
+        return i;
       });
       res[key] = decodedArr;
     } else if (value instanceof ProtoBuf.Builder.Message) {
@@ -108,7 +106,7 @@ export function messageToJSON(message: any) {
         res[key] = null;
       } else {
         const enumValues = meta._fieldsByName[key].resolvedType.getChildren();
-        res[key] = enumValues.find(e => e.id === value).name;
+        res[key] = enumValues.find((e) => e.id === value).name;
       }
     } else {
       res[key] = value;
@@ -116,4 +114,3 @@ export function messageToJSON(message: any) {
   }
   return res;
 }
-

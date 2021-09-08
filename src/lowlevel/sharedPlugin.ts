@@ -1,7 +1,7 @@
 export type TrezorDeviceInfoDebug = {
   path: string;
   debug: boolean;
-}
+};
 
 export type LowlevelTransportSharedPlugin = {
   enumerate: () => Promise<Array<TrezorDeviceInfoDebug>>;
@@ -25,6 +25,4 @@ export type LowlevelTransportSharedPlugin = {
   // where sometimes write doesn't fail on disconnect unless we enumerate
   // so we need to have an "optional lock"
   allowsWriteAndEnumerate: boolean;
-
-}
-
+};

@@ -4,10 +4,10 @@
 //
 // Logic of "call" is broken to two parts - sending and recieving
 
-import * as ByteBuffer from 'bytebuffer';
+import * as ByteBuffer from "bytebuffer";
 import type { Messages } from "./protobuf/messages";
 
-const patchNew = require('./protobuf/monkey_patch-new').patch;
+const patchNew = require("./protobuf/monkey_patch-new").patch;
 
 const HEADER_SIZE = 1 + 1 + 4 + 2;
 
@@ -19,8 +19,11 @@ export function buildOne(
   data: Object
 ): Buffer {
   const accessor = `hw.trezor.messages.${name}`;
-  // @ts-ignore
-  const messageType = messages.nested.hw.nested.trezor.nested.messages.nested.MessageType.values[`MessageType_${name}`];
+  const messageType =
+    // @ts-ignore
+    messages.nested.hw.nested.trezor.nested.messages.nested.MessageType.values[
+      `MessageType_${name}`
+    ];
   // @ts-ignore
   const Message = messages.lookupType(accessor);
 
@@ -34,13 +37,13 @@ export function buildOne(
 
   // Create a new message
   const message = Message.fromObject(payload, {
-    enums: String,  // enums as string names
+    enums: String, // enums as string names
     // longs: String,  // longs as strings (requires long.js)
-    bytes: String,  // bytes as base64 encoded strings
+    bytes: String, // bytes as base64 encoded strings
     defaults: true, // includes default values
-    arrays: true,   // populates empty arrays (repeated fields) even if defaults=false
-    objects: true,  // populates empty objects (map fields) even if defaults=false
-    oneofs: true    // includes virtual oneof fields set to the present field's name
+    arrays: true, // populates empty arrays (repeated fields) even if defaults=false
+    objects: true, // populates empty objects (map fields) even if defaults=false
+    oneofs: true, // includes virtual oneof fields set to the present field's name
   });
 
   // Encode a message to an Uint8Array (browser) or Buffer (node)
@@ -48,7 +51,7 @@ export function buildOne(
 
   const headerSize: number = HEADER_SIZE; // should be 8
   const bytes: Uint8Array = new Uint8Array(buffer);
-  const fullSize: number = ((headerSize - 2)) + bytes.length;
+  const fullSize: number = headerSize - 2 + bytes.length;
 
   const encodedByteBuffer = new ByteBuffer(fullSize);
 

@@ -1,14 +1,19 @@
-import type {Transport, AcquireInput, TrezorDeviceInfoWithSession, MessageFromTrezor} from './transport';
+import type {
+  Transport,
+  AcquireInput,
+  TrezorDeviceInfoWithSession,
+  MessageFromTrezor,
+} from "./transport";
 
 export default class FallbackTransport {
-  name: string = `FallbackTransport`;
-  activeName: string = ``;
+  name = `FallbackTransport`;
+  activeName = ``;
 
   _availableTransports: Array<Transport>;
   transports: Array<Transport>;
   configured: boolean;
   version: string;
-  debug: boolean = false;
+  debug = false;
 
   // note: activeTransport is actually "?Transport", but
   // everywhere I am using it is in `async`, so error gets returned as Promise.reject
@@ -79,7 +84,9 @@ export default class FallbackTransport {
     return this.activeTransport.enumerate();
   }
 
-  async listen(old?: Array<TrezorDeviceInfoWithSession>): Promise<Array<TrezorDeviceInfoWithSession>> {
+  async listen(
+    old?: Array<TrezorDeviceInfoWithSession>
+  ): Promise<Array<TrezorDeviceInfoWithSession>> {
     return this.activeTransport.listen(old);
   }
 
@@ -87,15 +94,29 @@ export default class FallbackTransport {
     return this.activeTransport.acquire(input, debugLink);
   }
 
-  async release(session: string, onclose: boolean, debugLink: boolean): Promise<void> {
+  async release(
+    session: string,
+    onclose: boolean,
+    debugLink: boolean
+  ): Promise<void> {
     return this.activeTransport.release(session, onclose, debugLink);
   }
 
-  async call(session: string, name: string, data: Object, debugLink: boolean): Promise<MessageFromTrezor> {
+  async call(
+    session: string,
+    name: string,
+    data: Object,
+    debugLink: boolean
+  ): Promise<MessageFromTrezor> {
     return this.activeTransport.call(session, name, data, debugLink);
   }
 
-  async post(session: string, name: string, data: Object, debugLink: boolean): Promise<void> {
+  async post(
+    session: string,
+    name: string,
+    data: Object,
+    debugLink: boolean
+  ): Promise<void> {
     return this.activeTransport.post(session, name, data, debugLink);
   }
 
@@ -108,7 +129,7 @@ export default class FallbackTransport {
     return this.activeTransport.requestDevice();
   }
 
-  requestNeeded: boolean = false;
+  requestNeeded = false;
 
   setBridgeLatestUrl(url: string): void {
     for (const transport of this.transports) {
