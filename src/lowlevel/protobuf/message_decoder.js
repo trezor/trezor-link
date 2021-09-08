@@ -66,7 +66,7 @@ export class MessageDecoder {
 }
 
 // Converts any ProtoBuf message to JSON in Trezor.js-friendly format
-function messageToJSON(message: ProtoBuf.Builder.Message) : Object {
+export function messageToJSON(message: ProtoBuf.Builder.Message) : Object {
   const res = {};
   const meta = message.$type;
 

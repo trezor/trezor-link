@@ -9,13 +9,13 @@
 import * as ProtoBuf from "protobufjs-old-fixed-webpack";
 
 type MessageArray<KeyType> = { [key: KeyType]: ProtoBuf.Bulder.Message };
-
 export class Messages {
   messagesByName: MessageArray<string>;
   messagesByType: MessageArray<number>;
   messageTypes: { [key: string]: number };
 
   constructor(messages: MessageArray<string>) {
+    
     this.messagesByName = messages;
 
     const messagesByType: MessageArray<number> = {};

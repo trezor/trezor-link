@@ -21,6 +21,7 @@ export function parseConfigure(data: JSON | string): Messages {
   // incoming data are in JSON.stringify format
   if (data.match(/^\{.*\}$/)) {
     const protobufMessages = ProtoBuf.newBuilder({})[`import`](JSON.parse(data)).build();
+    
     return new Messages(protobufMessages);
   }
 
