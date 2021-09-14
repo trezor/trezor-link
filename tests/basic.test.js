@@ -191,41 +191,41 @@ const messagesNew = {
 }
 
 const fixtures = [
-{
-    name: 'String',
-    params: { field: 'foo' },
-    encoded: '0a03666f6f',
-},
-{
-    name: 'Uint32',
-    params: { field: 4294967295 },
-    encoded: '10ffffffff0f',
-},
-{
-    name: 'Uint64',
-    params: { field: 1844674407370955 },
-    encoded: '18cba19cd68bb7a303',
-},
-{
-    name: 'Bool',
-    params: { field: true },
-    encoded: '2001',
-},
-{
-    name: 'Sint32',
-    params: { field: -4294967 },
-    encoded: '28eda48c04',
-},
-{
-    name: 'Sint64',
-    params: { field: -1844674407370955 },
-    encoded: '3095c3b8ac97eec606',
-},
-{
-    name: 'Bytes',
-    params: { field: '851fc9542342321af63ecbba7d3ece545f2a42bad01ba32cff5535b18e54b6d3106e10b6a4525993d185a1443d9a125186960e028eabfdd8d76cf70a3a7e3100' },
-    encoded: '3a40851fc9542342321af63ecbba7d3ece545f2a42bad01ba32cff5535b18e54b6d3106e10b6a4525993d185a1443d9a125186960e028eabfdd8d76cf70a3a7e3100',
-}]
+    {
+        name: 'String',
+        params: { field: 'foo' },
+        encoded: '0a03666f6f',
+    },
+    {
+        name: 'Uint32',
+        params: { field: 4294967295 },
+        encoded: '10ffffffff0f',
+    },
+    {
+        name: 'Uint64',
+        params: { field: 1844674407370955 },
+        encoded: '18cba19cd68bb7a303',
+    },
+    {
+        name: 'Bool',
+        params: { field: true },
+        encoded: '2001',
+    },
+    {
+        name: 'Sint32',
+        params: { field: -4294967 },
+        encoded: '28eda48c04',
+    },
+    {
+        name: 'Sint64',
+        params: { field: -1844674407370955 },
+        encoded: '3095c3b8ac97eec606',
+    },
+    {
+        name: 'Bytes',
+        params: { field: '851fc9542342321af63ecbba7d3ece545f2a42bad01ba32cff5535b18e54b6d3106e10b6a4525993d185a1443d9a125186960e028eabfdd8d76cf70a3a7e3100' },
+        encoded: '3a40851fc9542342321af63ecbba7d3ece545f2a42bad01ba32cff5535b18e54b6d3106e10b6a4525993d185a1443d9a125186960e028eabfdd8d76cf70a3a7e3100',
+    }]
 
 describe('primitives encode/decode using old/new lib', () => {
     const MessagesOld = ProtoBufOld.newBuilder({})[`import`](messagesOld).build();
@@ -237,7 +237,7 @@ describe('primitives encode/decode using old/new lib', () => {
             const MessageNew = MessagesNew.lookup(`messages.${f.name}`);
 
             test('old way', async () => {
-            // serialize old way - this is to confirm fixtures match old behavior
+                // serialize old way - this is to confirm fixtures match old behavior
                 const messageOld = new MessageOld(f.params);
                 const encodedOld = messageOld.encodeAB();
                 expect(Buffer.from(encodedOld).toString('hex')).toEqual(f.encoded);
@@ -249,9 +249,19 @@ describe('primitives encode/decode using old/new lib', () => {
 
             test('new way', () => {
                 // serialize new way - this is to confirm new lib won't break old behavior
-            
+
                 const params = patchNew(MessageNew, f.params);
-                const messageNew = MessageNew.fromObject(params);
+                const messageNew = MessageNew.fromObject(params,
+                    // {
+                    //     enums: String, // enums as string names
+                    //     longs: String, // longs as strings (requires long.js)
+                    //     bytes: String, // bytes as base64 encoded strings
+                    //     defaults: true, // includes default values
+                    //     arrays: true, // populates empty arrays (repeated fields) even if defaults=false
+                    //     objects: true, // populates empty objects (map fields) even if defaults=false
+                    //     oneofs: true, // includes virtual oneof fields set to the present field's name
+                    // }
+                );
                 const encodedNew = MessageNew.encode(messageNew).finish();
                 expect(encodedNew.toString('hex')).toEqual(f.encoded);
 
