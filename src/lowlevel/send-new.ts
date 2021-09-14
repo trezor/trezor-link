@@ -2,7 +2,7 @@
 
 // Logic of sending data to trezor
 //
-// Logic of "call" is broken to two parts - sending and recieving
+// Logic of "call" is broken to two parts - sending and receiving
 
 import * as ByteBuffer from "bytebuffer";
 import type { Messages } from "./protobuf/messages";
@@ -22,7 +22,7 @@ export function buildOne(
   const messageType =
     // @ts-ignore
     messages.nested.hw.nested.trezor.nested.messages.nested.MessageType.values[
-      `MessageType_${name}`
+    `MessageType_${name}`
     ];
   // @ts-ignore
   const Message = messages.lookupType(accessor);
@@ -38,7 +38,7 @@ export function buildOne(
   // Create a new message
   const message = Message.fromObject(payload, {
     enums: String, // enums as string names
-    // longs: String,  // longs as strings (requires long.js)
+    longs: String, // longs as strings (requires long.js)
     bytes: String, // bytes as base64 encoded strings
     defaults: true, // includes default values
     arrays: true, // populates empty arrays (repeated fields) even if defaults=false
