@@ -13,7 +13,8 @@
     "test:unit:old": "jest --testPathPattern old.test --coverage false",
     "test:unit:new": "jest --testPathPattern new.test --coverage false",
     "test:unit:new:debug": "node --inspect-brk node_modules/.bin/ts-jest --runInBand --testPathPattern new.test --coverage false",
-    "test:integration": "jest --verbose -c jest.config.integration.js",
+    "test:integration:old": "jest --verbose -c jest.config.integration.js --testPathPattern bridge-old.integration",
+    "test:integration:new": "jest --verbose -c jest.config.integration.js --testPathPattern bridge-new.integration",
     "build:new": "yarn tsc"
   },
   "repository": "https://github.com/trezor/trezor-link.git",

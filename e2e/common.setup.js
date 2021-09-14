@@ -1,4 +1,4 @@
-import { Controller } from './websocket-client';
+const Controller = require('./websocket-client').Controller;
 
 const MNEMONICS = {
     mnemonic_all: 'all all all all all all all all all all all all',
@@ -29,6 +29,7 @@ const setup = async (controller) => {
         await controller.send({ type: 'emulator-setup', ...emulatorSetupOpts});
         await controller.send({ type: 'bridge-start' });
     } catch (err) {
+        console.log(err)
         // this means that something in trezor-user-env got wrong.
         process.exit(1)
     }

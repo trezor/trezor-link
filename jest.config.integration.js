@@ -1,6 +1,7 @@
 /*
  * Integration tests
  */
+/** @type {import('ts-jest/dist/types').InitialOptionsTsJest} */
 
 module.exports = {
     rootDir: './',
@@ -21,4 +22,6 @@ module.exports = {
     // collectCoverageFrom: ['./src/js/**/*.{js}', '!**/node_modules/**'],
     verbose: true,
     bail: true,
+    preset: 'ts-jest',
+    testEnvironment: 'node'
 };
