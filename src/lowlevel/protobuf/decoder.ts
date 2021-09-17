@@ -33,7 +33,7 @@ const primitiveTypes = [
 /*
   Legacy outbound middleware
 */
-export function messageToJSON(Message: any, payload) {
+function messageToJSON(Message: any, payload) {
   if (!Message) return Message; // Message null? but this smells
 
   const { $type, ...message } = Message;
@@ -89,4 +89,16 @@ export function messageToJSON(Message: any, payload) {
   }
 
   return res;
+}
+
+export const decode = (Message, data) => {
+
+    const m = Message.decode(data);
+
+    const asObj = Message.toObject(m, {
+        defaults: false,
+
+    });
+
+    return messageToJSON(m, asObj);
 }

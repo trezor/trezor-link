@@ -130,13 +130,11 @@ export default class BridgeTransport {
   }
 
   async call(session: string, name: string, data: Object, debugLink: boolean) {
-    console.log("--------------call", name, data);
     if (this._messages == null) {
       throw new Error(`Transport not configured.`);
     }
     const messages = this._messages;
     const o = buildOne(messages, name, data);
-    console.log("builtOneResult", o);
     const outData = o.toString(`hex`);
     const resData = await this._post({
       url: `${debugLink ? `/debug` : ``}/call/${session}`,
@@ -145,9 +143,7 @@ export default class BridgeTransport {
     if (typeof resData !== `string`) {
       throw new Error(`Returning data is not string.`);
     }
-    console.log('response', resData);
     const jsonData = receiveOne(messages, new Buffer(resData, `hex`));
-    console.log("----------receive", jsonData);
     return check.call(jsonData);
   }
 

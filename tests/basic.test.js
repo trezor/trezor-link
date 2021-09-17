@@ -1,9 +1,9 @@
 
 const messageToJSONOld = require('../src/lowlevel/protobuf/message_decoder').messageToJSON
-const messageToJSONNew = require('../src/lowlevel/protobuf/message_decoder-new').messageToJSON
-
 const patchOld = require('../src/lowlevel/protobuf/monkey_patch').patch;
-const patchNew = require('../src/lowlevel/protobuf/monkey_patch-new').patch;
+
+const encode = require('../src/lowlevel/protobuf/encoder').encode;
+const decode = require('../src/lowlevel/protobuf/decoder').decode;
 
 const ProtoBufOld = require("protobufjs-old-fixed-webpack");
 const ProtoBufNew = require("protobufjs");
@@ -284,29 +284,14 @@ describe('basic concepts', () => {
 
                 test('new way', () => {
                     // serialize new way - this is to confirm new lib won't break old behavior
+                    const encodedNew = encode(MessageNew, f.params)
 
-                    const params = patchNew(MessageNew, f.params);
-                    const messageNew = MessageNew.fromObject(params,
-                        // {
-                        //     enums: String, // enums as string names
-                        //     longs: String, // longs as strings (requires long.js)
-                        //     bytes: String, // bytes as base64 encoded strings
-                        //     defaults: true, // includes default values
-                        //     arrays: true, // populates empty arrays (repeated fields) even if defaults=false
-                        //     objects: true, // populates empty objects (map fields) even if defaults=false
-                        //     oneofs: true, // includes virtual oneof fields set to the present field's name
-                        // }
-                    );
-                    const encodedNew = MessageNew.encode(messageNew).finish();
                     expect(encodedNew.toString('hex')).toEqual(f.encoded);
 
                     // deserialize new way - this is to confirm new lib won't break old behavior
                     // deserialize new way - this is to confirm new lib won't break old behavior
-                    const raw = MessageNew.decode(encodedNew);
-                    const asObj = MessageNew.toObject(raw, {
-                        defaults: false,
-                    })
-                    const decodedNew = messageToJSONNew(raw, asObj);
+                    
+                    const decodedNew = decode(MessageNew, encodedNew);
                     expect(decodedNew).toEqual(f.params);
                 });
             })
@@ -333,28 +318,13 @@ describe('basic concepts', () => {
 
                 test('new way', () => {
                     // serialize new way - this is to confirm new lib won't break old behavior
+                    const encodedNew = encode(MessageNew, f.in)
 
-                    const params = patchNew(MessageNew, f.in);
-                    const messageNew = MessageNew.fromObject(params,
-                        // {
-                        //     enums: String, // enums as string names
-                        //     longs: String, // longs as strings (requires long.js)
-                        //     bytes: String, // bytes as base64 encoded strings
-                        //     defaults: true, // includes default values
-                        //     arrays: true, // populates empty arrays (repeated fields) even if defaults=false
-                        //     objects: true, // populates empty objects (map fields) even if defaults=false
-                        //     oneofs: true, // includes virtual oneof fields set to the present field's name
-                        // }
-                    );
-                    const encodedNew = MessageNew.encode(messageNew).finish();
                     expect(encodedNew.toString('hex')).toEqual(f.encoded);
 
                     // deserialize new way - this is to confirm new lib won't break old behavior
-                    const raw = MessageNew.decode(encodedNew);
-                    const asObj = MessageNew.toObject(raw, {
-                        defaults: false,
-                    })
-                    const decodedNew = messageToJSONNew(raw, asObj);
+                    const decodedNew = decode(MessageNew, encodedNew);
+                    
                     expect(decodedNew).toEqual(f.out);
                 });
             })
