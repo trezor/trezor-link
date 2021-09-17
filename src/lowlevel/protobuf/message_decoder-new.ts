@@ -3,6 +3,13 @@ import { Enum } from "protobufjs";
 // todo:
 const transform = (field: any, value: any) => {
   if (field.type === "bytes") {
+    if (!value) return null;
+    if (Array.isArray(value)) {
+      // ???
+      if (!value.length) return null;
+
+      return value.map(v => v.toString('hex'));
+    }
     return value.toString("hex");
   }
   if (field.long) {
@@ -26,20 +33,24 @@ const primitiveTypes = [
 /*
   Legacy outbound middleware
 */
-export function messageToJSON(input: any) {
-  const { $type, ...message } = input;
-  const res = {};
+export function messageToJSON(Message: any, payload) {
+  if (!Message) return Message; // Message null? but this smells
 
+  const { $type, ...message } = Message;
+  const res = {};
   for (const key in $type.fields) {
     const field = $type.fields[key];
-    const value = message[key];
+    const value = Message[key];
+
     if (primitiveTypes.includes(field.type)) {
-      if (field.repeated) {
-        res[key] = value.map((v, i) => transform(field, value[i]));
-      } else {
-        res[key] = transform(field, value);
+      if (field.optional && typeof payload[key] === 'undefined') {
+        res[key] = null;
       }
-      continue;
+      else if (field.repeated) {
+        res[key] = payload[key].map(v => transform(field, v));
+      } else {
+        res[key] = transform(field, payload[key]);
+      }
     } else if (field.resolvedType instanceof Enum) {
       if (field.repeated) {
         res[key] = value.map((v, i) => v);
@@ -47,13 +58,8 @@ export function messageToJSON(input: any) {
         res[key] = field.resolvedType.valuesById[value];
       }
     }
-    // else if (value instanceof Buffer) {
-    //   res[key] = value.toString('hex');
-    // } else if (value instanceof Long) {
-    //   res[key] = value.toNumber();
-    // }
     else if (Array.isArray(value)) {
-      const decodedArr = value.map((i) => {
+      const decodedArr = value.map((v, i) => {
         // was not handled, for example MultisigRedeemScriptType has this:
         //   {
         //     "rule": "repeated",
@@ -66,17 +72,21 @@ export function messageToJSON(input: any) {
         // if (i instanceof ByteBuffer) {
         //   return i.toHex();
         // }
-        if (typeof i === "object") {
-          return messageToJSON(i);
+        if (typeof v === "object") {
+          return messageToJSON(v, payload[key][i]);
         }
         return i;
       });
       res[key] = decodedArr;
     } else if (typeof value === "object") {
-      res[key] = messageToJSON(value);
+
+      res[key] = messageToJSON(value, payload[key]);
     } else {
-      res[key] = value;
+
+      res[key] = payload[key];
     }
+    debugger
   }
+
   return res;
 }

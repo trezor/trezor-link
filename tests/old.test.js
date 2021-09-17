@@ -46,7 +46,7 @@ const failingOnDecode = [
 
 describe('encoding json -> protobuf', () => {
     fixtures
-        // .filter(f => f.name === 'EthereumSignTx') // for debug
+        // .filter(f => f.name === 'Features') // for debug
         .forEach(f => {
             test(`message ${f.name} ${JSON.stringify(f.params)}`, () => {
                 expect(() => {

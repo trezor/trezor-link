@@ -2,7 +2,7 @@
 // however, it is not doing actual sending in/to the devices
 // and it refers enumerate to bridge
 
-import semvercmp from "semver-compare";
+// import semvercmp from "semver-compare";
 import { request as http, setFetch as rSetFetch } from "./http";
 import type { AcquireInput, TrezorDeviceInfoWithSession } from "../transport";
 import * as check from "../highlevel-checks";
@@ -69,19 +69,22 @@ export default class BridgeTransport {
       typeof this.bridgeVersion === `string`
         ? this.bridgeVersion
         : check.version(
-            await http({
-              url: `${this.newestVersionUrl}?${Date.now()}`,
-              method: `GET`,
-            })
-          );
-    this.isOutdated = semvercmp(this.version, newVersion) < 0;
+          await http({
+            url: `${this.newestVersionUrl}?${Date.now()}`,
+            method: `GET`,
+          })
+        );
+    // this.isOutdated = semvercmp(this.version, newVersion) < 0;
   }
 
   async configure(signedData: any): Promise<void> {
+
     const messages = parseConfigure(signedData);
     this.configured = true;
     // @ts-ignore
     this._messages = messages;
+    // @ts-ignore
+
   }
 
   async listen(
@@ -106,9 +109,8 @@ export default class BridgeTransport {
 
   async _acquireMixed(input: AcquireInput, debugLink: boolean) {
     const previousStr = input.previous == null ? `null` : input.previous;
-    const url = `${debugLink ? `/debug` : ``}/acquire/${
-      input.path
-    }/${previousStr}`;
+    const url = `${debugLink ? `/debug` : ``}/acquire/${input.path
+      }/${previousStr}`;
     return this._post({ url });
   }
 
@@ -128,11 +130,14 @@ export default class BridgeTransport {
   }
 
   async call(session: string, name: string, data: Object, debugLink: boolean) {
+    console.log("--------------call", name, data);
     if (this._messages == null) {
       throw new Error(`Transport not configured.`);
     }
     const messages = this._messages;
-    const outData = buildOne(messages, name, data).toString(`hex`);
+    const o = buildOne(messages, name, data);
+    console.log("builtOneResult", o);
+    const outData = o.toString(`hex`);
     const resData = await this._post({
       url: `${debugLink ? `/debug` : ``}/call/${session}`,
       body: outData,
@@ -140,7 +145,9 @@ export default class BridgeTransport {
     if (typeof resData !== `string`) {
       throw new Error(`Returning data is not string.`);
     }
+    console.log('response', resData);
     const jsonData = receiveOne(messages, new Buffer(resData, `hex`));
+    console.log("----------receive", jsonData);
     return check.call(jsonData);
   }
 

@@ -64,22 +64,22 @@ describe('encoding json -> protobuf', () => {
         .filter(f => !problems.includes(f.name))
         // .filter(f => f.name === 'TezosSignTx') // for debug
         // .filter(f => [
-        //     'Address',
-        //     'ApplyFlags',
-        //     'ApplySettings',
-        //     'AuthorizeCoinJoin',
-        //     'BackupDevice',
-        //     'BinanceAddress',
-        //     'BinanceGetAddress',
-        //     'BinanceCancelMsg',
-        //     'BinanceGetAddress',
-        //     'BinanceGetPublicKey',
-        //     'BinanceOrderMsg',
-        //     'BinancePublicKey',
-        //     'BinanceSignTx',
-        //     'BinanceSignedTx',
-        //     'BinanceTransferMsg',
-        //     'BinanceTxRequest',
+        //     // 'Address',
+        //     // 'ApplyFlags',
+        //     // 'ApplySettings',
+        //     // 'AuthorizeCoinJoin',
+        //     // 'BackupDevice',
+        //     // 'BinanceAddress',
+        //     // 'BinanceGetAddress',
+        //     // 'BinanceCancelMsg',
+        //     // 'BinanceGetAddress',
+        //     // 'BinanceGetPublicKey',
+        //     // 'BinanceOrderMsg',
+        //     // 'BinancePublicKey',
+        //     // 'BinanceSignTx',
+        //     // 'BinanceSignedTx',
+        //     // 'BinanceTransferMsg',
+        //     // 'BinanceTxRequest',
         // ].includes(f.name)) // for debug
         .forEach((f) => {
 
@@ -98,6 +98,7 @@ describe('encoding json -> protobuf', () => {
                 if (!failingOnDecode.includes(f.name)) {
                     // then decode message and check, whether decoded message matches original json
                     const decodedMessage = receiveOne(parsedMessages, encodedMessage);
+                    
                     expect(decodedMessage.type).toEqual(f.name);
                     expect(decodedMessage.message).toEqual(f.params);
 

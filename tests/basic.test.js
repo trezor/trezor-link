@@ -10,23 +10,6 @@ const ProtoBufNew = require("protobufjs");
 
 patchOld();
 
-
-// ProtoBufNew.Reflect.Message.Field.prototype.verifyValueOriginal = ProtoBufNew.Reflect.Message.Field.prototype.verifyValue;
-
-// // note: don't rewrite this function to arrow (value, skipRepeated) => ....
-// // since I need `this` from the original context
-// ProtoBufNew.Reflect.Message.Field.prototype.verifyValue = function (value, skipRepeated) {
-//   let newValue = value;
-//   if (this.type === ProtoBufNew.TYPES[`bytes`]) {
-//     if (value != null) {
-//       if (typeof value === `string`) {
-//         newValue = ByteBuffer.wrap(value, `hex`);
-//       }
-//     }
-//   }
-//   return this.verifyValueOriginal(newValue, skipRepeated);
-// };
-
 const messagesOld = {
     messages: [
         {
@@ -112,9 +95,29 @@ const messagesOld = {
                     "id": 7
                 }
             ],
-        }
-    ]
+        },
 
+        // complex and real life examples
+        {
+            "name": "ComplexFieldOfOptionals",
+            "fields": [
+                {
+                    "rule": "optional",
+                    "options": {},
+                    "type": "bool",
+                    "name": "bool",
+                    "id": 8
+                },
+                {
+                    "rule": "optional",
+                    "options": {},
+                    "type": "uint32",
+                    "name": "number",
+                    "id": 9
+                }
+            ],
+        },
+    ]
 }
 
 const messagesNew = {
@@ -185,12 +188,27 @@ const messagesNew = {
                     }
                 },
 
+                //  complex and real life examples
+                "ComplexFieldOfOptionals": {
+                    "fields": {
+                        "bool": {
+                            "rule": "optional",
+                            "type": "bool",
+                            "id": 8
+                        },
+                        "number": {
+                            "rule": "optional",
+                            "type": "uint32",
+                            "id": 9
+                        }
+                    }
+                },
             }
         }
     }
 }
 
-const fixtures = [
+const basicFixtures = [
     {
         name: 'String',
         params: { field: 'foo' },
@@ -212,6 +230,11 @@ const fixtures = [
         encoded: '2001',
     },
     {
+        name: 'Bool',
+        params: { field: false },
+        encoded: '2000',
+    },
+    {
         name: 'Sint32',
         params: { field: -4294967 },
         encoded: '28eda48c04',
@@ -227,51 +250,115 @@ const fixtures = [
         encoded: '3a40851fc9542342321af63ecbba7d3ece545f2a42bad01ba32cff5535b18e54b6d3106e10b6a4525993d185a1443d9a125186960e028eabfdd8d76cf70a3a7e3100',
     }]
 
-describe('primitives encode/decode using old/new lib', () => {
+
+// note: difference in bool encoding. if type === bool && field = optional && not message of only one field, bool is encoded as ""
+const advancedFixtures = [
+    {
+        name: 'ComplexFieldOfOptionals',
+        in: { number: 1 },
+        encoded: '4801',
+        out: { bool: null, number: 1 },
+    },
+]
+
+describe('basic concepts', () => {
     const MessagesOld = ProtoBufOld.newBuilder({})[`import`](messagesOld).build();
     const MessagesNew = ProtoBufNew.Root.fromJSON(messagesNew);
 
-    fixtures.forEach(f => {
-        describe(f.name, () => {
-            const MessageOld = MessagesOld[f.name];
-            const MessageNew = MessagesNew.lookup(`messages.${f.name}`);
+    describe('primitives encode/decode using old/new lib', () => {
+        basicFixtures.forEach(f => {
+            describe(f.name, () => {
+                const MessageOld = MessagesOld[f.name];
+                const MessageNew = MessagesNew.lookup(`messages.${f.name}`);
 
-            test('old way', async () => {
-                // serialize old way - this is to confirm fixtures match old behavior
-                const messageOld = new MessageOld(f.params);
-                const encodedOld = messageOld.encodeAB();
-                expect(Buffer.from(encodedOld).toString('hex')).toEqual(f.encoded);
+                test('old way', async () => {
+                    // serialize old way - this is to confirm fixtures match old behavior
+                    const messageOld = new MessageOld(f.params);
+                    const encodedOld = messageOld.encodeAB();
+                    expect(Buffer.from(encodedOld).toString('hex')).toEqual(f.encoded);
 
-                // deserialize
-                const decodedOld = messageToJSONOld(MessageOld.decode(encodedOld));
-                expect(decodedOld).toEqual(f.params);
-            });
+                    // deserialize
+                    const decodedOld = messageToJSONOld(MessageOld.decode(encodedOld));
+                    expect(decodedOld).toEqual(f.params);
+                });
 
-            test('new way', () => {
-                // serialize new way - this is to confirm new lib won't break old behavior
+                test('new way', () => {
+                    // serialize new way - this is to confirm new lib won't break old behavior
 
-                const params = patchNew(MessageNew, f.params);
-                const messageNew = MessageNew.fromObject(params,
-                    // {
-                    //     enums: String, // enums as string names
-                    //     longs: String, // longs as strings (requires long.js)
-                    //     bytes: String, // bytes as base64 encoded strings
-                    //     defaults: true, // includes default values
-                    //     arrays: true, // populates empty arrays (repeated fields) even if defaults=false
-                    //     objects: true, // populates empty objects (map fields) even if defaults=false
-                    //     oneofs: true, // includes virtual oneof fields set to the present field's name
-                    // }
-                );
-                const encodedNew = MessageNew.encode(messageNew).finish();
-                expect(encodedNew.toString('hex')).toEqual(f.encoded);
+                    const params = patchNew(MessageNew, f.params);
+                    const messageNew = MessageNew.fromObject(params,
+                        // {
+                        //     enums: String, // enums as string names
+                        //     longs: String, // longs as strings (requires long.js)
+                        //     bytes: String, // bytes as base64 encoded strings
+                        //     defaults: true, // includes default values
+                        //     arrays: true, // populates empty arrays (repeated fields) even if defaults=false
+                        //     objects: true, // populates empty objects (map fields) even if defaults=false
+                        //     oneofs: true, // includes virtual oneof fields set to the present field's name
+                        // }
+                    );
+                    const encodedNew = MessageNew.encode(messageNew).finish();
+                    expect(encodedNew.toString('hex')).toEqual(f.encoded);
 
-                // deserialize new way - this is to confirm new lib won't break old behavior
-                const decodedNew = messageToJSONNew(MessageNew.decode(encodedNew));
-                expect(decodedNew).toEqual(f.params);
-            });
+                    // deserialize new way - this is to confirm new lib won't break old behavior
+                    // deserialize new way - this is to confirm new lib won't break old behavior
+                    const raw = MessageNew.decode(encodedNew);
+                    const asObj = MessageNew.toObject(raw, {
+                        defaults: false,
+                    })
+                    const decodedNew = messageToJSONNew(raw, asObj);
+                    expect(decodedNew).toEqual(f.params);
+                });
+            })
 
         })
 
     })
 
+    describe('optional / missing fields', () => {
+        advancedFixtures.forEach(f => {
+            describe(f.name, () => {
+                const MessageOld = MessagesOld[f.name];
+                const MessageNew = MessagesNew.lookup(`messages.${f.name}`);
+
+                test('old way', () => {
+                    const messageOld = new MessageOld(f.in);
+                    const encodedOld = messageOld.encodeAB();
+                    expect(Buffer.from(encodedOld).toString('hex')).toEqual(f.encoded);
+
+                    // deserialize
+                    const decodedOld = messageToJSONOld(MessageOld.decode(encodedOld));
+                    expect(decodedOld).toEqual(f.out);
+                })
+
+                test('new way', () => {
+                    // serialize new way - this is to confirm new lib won't break old behavior
+
+                    const params = patchNew(MessageNew, f.in);
+                    const messageNew = MessageNew.fromObject(params,
+                        // {
+                        //     enums: String, // enums as string names
+                        //     longs: String, // longs as strings (requires long.js)
+                        //     bytes: String, // bytes as base64 encoded strings
+                        //     defaults: true, // includes default values
+                        //     arrays: true, // populates empty arrays (repeated fields) even if defaults=false
+                        //     objects: true, // populates empty objects (map fields) even if defaults=false
+                        //     oneofs: true, // includes virtual oneof fields set to the present field's name
+                        // }
+                    );
+                    const encodedNew = MessageNew.encode(messageNew).finish();
+                    expect(encodedNew.toString('hex')).toEqual(f.encoded);
+
+                    // deserialize new way - this is to confirm new lib won't break old behavior
+                    const raw = MessageNew.decode(encodedNew);
+                    const asObj = MessageNew.toObject(raw, {
+                        defaults: false,
+                    })
+                    const decodedNew = messageToJSONNew(raw, asObj);
+                    expect(decodedNew).toEqual(f.out);
+                });
+            })
+
+        })
+    })
 })

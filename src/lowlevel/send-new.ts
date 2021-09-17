@@ -19,15 +19,21 @@ export function buildOne(
   data: Object
 ): Buffer {
   const accessor = `hw.trezor.messages.${name}`;
-  const messageType =
+  // @ts-ignore
+  const Message = messages.lookupType(accessor);
+
+  let messageType =
     // @ts-ignore
     messages.nested.hw.nested.trezor.nested.messages.nested.MessageType.values[
     `MessageType_${name}`
     ];
-  // @ts-ignore
-  const Message = messages.lookupType(accessor);
+
+  if (!messageType && Message.options) {
+    messageType = Message.options['(wire_type)'];
+  }
 
   const payload = patchNew(Message, data);
+
   // Verify the payload if necessary (i.e. when possibly incomplete or invalid)
   const errMsg = Message.verify(payload);
   if (errMsg) {
@@ -35,18 +41,23 @@ export function buildOne(
     // throw Error(errMsg);
   }
 
+  // if (payload?.tx?.input?.amount) {
+  //   payload.tx.input.amount = 3600;
+  // }
   // Create a new message
   const message = Message.fromObject(payload, {
     enums: String, // enums as string names
-    longs: String, // longs as strings (requires long.js)
+    // longs: String, // longs as strings (requires long.js)
     bytes: String, // bytes as base64 encoded strings
-    defaults: true, // includes default values
+    defaults: false, // includes default values
     arrays: true, // populates empty arrays (repeated fields) even if defaults=false
     objects: true, // populates empty objects (map fields) even if defaults=false
     oneofs: true, // includes virtual oneof fields set to the present field's name
   });
 
   // Encode a message to an Uint8Array (browser) or Buffer (node)
+  // const buffer = Message.encode(message).finish();
+
   const buffer = Message.encode(message).finish();
 
   const headerSize: number = HEADER_SIZE; // should be 8
@@ -54,7 +65,6 @@ export function buildOne(
   const fullSize: number = headerSize - 2 + bytes.length;
 
   const encodedByteBuffer = new ByteBuffer(fullSize);
-
   // 2 bytes
   encodedByteBuffer.writeUint16(messageType);
 
