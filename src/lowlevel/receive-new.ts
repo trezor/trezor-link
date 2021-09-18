@@ -1,11 +1,7 @@
-import * as ByteBuffer from "bytebuffer";
+import { decode as decodeProtobuf } from "./protobuf/decoder";
+import { decode as decodeProtocol } from "./protocol/decode";
 
-import { decode } from './protobuf/decoder';
-
-export function receiveOne(messages: any, data: Buffer) {
-  const byteBuffer: ByteBuffer = ByteBuffer.concat([data]);
-  const typeId: number = byteBuffer.readUint16();
-
+const createMessage = (messages, typeId) => {
   const messageTypes =
     messages.nested.hw.nested.trezor.nested.messages.nested.MessageType.values;
   const messageType = Object.keys(messageTypes)
@@ -15,9 +11,17 @@ export function receiveOne(messages: any, data: Buffer) {
   const accessor = `hw.trezor.messages.${messageType}`;
   const Message = messages.lookupType(accessor);
 
-  byteBuffer.readUint32(); // length, ignoring
+  return {
+    Message,
+    messageType,
+  };
+};
 
-  const message = decode(Message, byteBuffer.toBuffer());
+export function receiveOne(messages: any, data: Buffer) {
+  const { typeId, buffer } = decodeProtocol(data);
+  const { Message, messageType } = createMessage(messages, typeId);
+
+  const message = decodeProtobuf(Message, buffer);
 
   return {
     message,

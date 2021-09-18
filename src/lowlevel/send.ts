@@ -146,7 +146,7 @@ function cleanupInput(message: Object): void {
 // name: Name of the message
 // data: Data to serialize, exactly as given by trezor.js
 // Returning buffers that will be sent to Trezor
-function buildBuffers(
+export function buildBuffers(
   messages: Messages,
   name: string,
   data: Object

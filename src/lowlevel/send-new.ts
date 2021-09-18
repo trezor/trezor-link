@@ -4,21 +4,11 @@
 //
 // Logic of "call" is broken to two parts - sending and receiving
 
-import * as ByteBuffer from "bytebuffer";
-import type { Messages } from "./protobuf/messages";
 
-import { encode } from "./protobuf/encoder";
+import { encode as encodeProtobuf } from "./protobuf";
+import { encode as encodeProtocol } from "./protocol";
 
-const HEADER_SIZE = 1 + 1 + 4 + 2;
-
-// Sends message to device.
-// Resolves if everything gets sent
-export function buildOne(
-  messages: Messages,
-  name: string,
-  data: Object
-): Buffer {
- 
+const createMessage = (messages, name) => {
   const accessor = `hw.trezor.messages.${name}`;
   // @ts-ignore
   const Message = messages.lookupType(accessor);
@@ -32,28 +22,33 @@ export function buildOne(
   if (!messageType && Message.options) {
     messageType = Message.options["(wire_type)"];
   }
+  return {
+    Message,
+    messageType,
+  };
+};
 
-  const buffer = encode(Message, data);
+// Sends message to device.
+// Resolves if everything gets sent
+export function buildOne(messages: any, name: string, data: Object) {
+  const { Message, messageType } = createMessage(messages, name);
 
-  const headerSize: number = HEADER_SIZE; // should be 8
-  // @ts-ignore
-  const bytes: Uint8Array = new Uint8Array(buffer);
-  const fullSize: number = headerSize - 2 + bytes.length;
+  const buffer = encodeProtobuf(Message, data);
 
-  const encodedByteBuffer = new ByteBuffer(fullSize);
-  // 2 bytes
-  encodedByteBuffer.writeUint16(messageType);
-
-  // 4 bytes (so 8 in total)
-  encodedByteBuffer.writeUint32(bytes.length);
-
-  // then put in the actual message
-  encodedByteBuffer.append(bytes);
-
-  // and convert to uint8 array
-  // (it can still be too long to send though)
-  const encoded: Uint8Array = new Uint8Array(encodedByteBuffer.buffer);
-
-  // return bytes;
-  return Buffer.from(encoded);
+  return encodeProtocol(buffer, {
+    addTrezorHeaders: false,
+    trezorFormat: false,
+    messageType,
+  });
 }
+
+export const buildBuffers = (messages: any, name: string, data: Object) => {
+  const { Message, messageType } = createMessage(messages, name);
+
+  const buffer = encodeProtobuf(Message, data);
+  return encodeProtocol(buffer, {
+    addTrezorHeaders: true,
+    trezorFormat: true,
+    messageType,
+  });
+};

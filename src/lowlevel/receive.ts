@@ -39,10 +39,13 @@ class PartiallyParsedInput {
 function parseFirstInput(bytes: ArrayBuffer): PartiallyParsedInput {
   // convert to ByteBuffer so it's easier to read
   const byteBuffer: ByteBuffer = ByteBuffer.concat([bytes]);
+  // byteBuffer.readByte();
+  // byteBuffer.readByte();
 
   // checking first two bytes
   const sharp1: number = byteBuffer.readByte();
   const sharp2: number = byteBuffer.readByte();
+
   if (sharp1 !== MESSAGE_HEADER_BYTE || sharp2 !== MESSAGE_HEADER_BYTE) {
     throw new Error(`Didn't receive expected header signature.`);
   }
@@ -50,7 +53,6 @@ function parseFirstInput(bytes: ArrayBuffer): PartiallyParsedInput {
   // reading things from header
   const type: number = byteBuffer.readUint16();
   const length: number = byteBuffer.readUint32();
-
   // creating a new buffer with the right size
   const res: PartiallyParsedInput = new PartiallyParsedInput(type, length);
   res.append(byteBuffer);

@@ -57,10 +57,10 @@ describe('encoding json -> protobuf', () => {
                 const encodedMessage = buildOne(parsedMessages, f.name, f.params)
                 expect(encodedMessage.toString('hex')).toMatchSnapshot();
                 if (!failingOnDecode.includes(f.name)) {
-                  // then decode message and check, whether decoded message matches original json
-                  const decodedMessage = receiveOne(parsedMessages, encodedMessage);
-                  expect(decodedMessage.type).toEqual(f.name);
-                  expect(decodedMessage.message).toEqual(f.params);
+                    // then decode message and check, whether decoded message matches original json
+                    const decodedMessage = receiveOne(parsedMessages, encodedMessage);
+                    expect(decodedMessage.type).toEqual(f.name);
+                    expect(decodedMessage.message).toEqual(f.params);
                 }
             });
         });
