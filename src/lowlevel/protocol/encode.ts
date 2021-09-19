@@ -1,4 +1,5 @@
-import * as ByteBuffer from "bytebuffer";
+// import * as ByteBuffer from "bytebuffer";
+import { ByteBuffer } from "protobufjs-old-fixed-webpack";
 
 const HEADER_SIZE = 1 + 1 + 4 + 2;
 const MESSAGE_HEADER_BYTE = 0x23;
@@ -44,10 +45,10 @@ export const encode = (
 
   // How many pieces will there actually be
   const count = Math.floor((bytes.length - 1) / size) + 1;
-
+  
   // slice and dice
   for (let i = 0; i < count; i++) {
-    const slice: Uint8Array = bytes.subarray(i * size, (i + 1) * size);
+    const slice: Uint8Array = encoded.subarray(i * size, (i + 1) * size);
     const newArray: Uint8Array = new Uint8Array(size);
     newArray.set(slice);
     result.push(newArray.buffer);

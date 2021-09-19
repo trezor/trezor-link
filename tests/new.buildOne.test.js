@@ -62,25 +62,6 @@ const getParsedMessages = async () => {
 describe('encoding json -> protobuf', () => {
     fixtures
         .filter(f => !problems.includes(f.name))
-        // .filter(f => f.name === 'TezosSignTx') // for debug
-        // .filter(f => [
-        //     // 'Address',
-        //     // 'ApplyFlags',
-        //     // 'ApplySettings',
-        //     // 'AuthorizeCoinJoin',
-        //     // 'BackupDevice',
-        //     // 'BinanceAddress',
-        //     // 'BinanceGetAddress',
-        //     // 'BinanceCancelMsg',
-        //     // 'BinanceGetAddress',
-        //     // 'BinanceGetPublicKey',
-        //     // 'BinanceOrderMsg',
-        //     // 'BinancePublicKey',
-        //     // 'BinanceSignTx',
-        //     // 'BinanceSignedTx',
-        //     // 'BinanceTransferMsg',
-        //     // 'BinanceTxRequest',
-        // ].includes(f.name)) // for debug
         .forEach((f) => {
 
             test(`message ${f.name} ${JSON.stringify(f.params)}`, async () => {

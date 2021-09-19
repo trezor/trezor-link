@@ -1,28 +1,11 @@
-const parseConfigure = require('../src/lowlevel/protobuf/parse_protocol').parseConfigure;
-const buildBuffers = require('../src/lowlevel/send').buildBuffers;
+const parseConfigure = require('../src/lowlevel/protobuf/parse_protocol-new').parseConfigure
+const buildBuffers = require('../src/lowlevel/send-new').buildBuffers;
+const receiveAndParse = require('../src/lowlevel/receive-new').receiveAndParse;
 
-const receiveAndParse = require('../src/lowlevel/receive').receiveAndParse;
-const patch = require('../src/lowlevel/protobuf/monkey_patch').patch;
-
-patch();
-const { ByteBuffer } = require("protobufjs-old-fixed-webpack");
-
-
-const messages = require('./__fixtures__/messages.json');
+const messages = require('../messages.json');
 const fixtures = require('./__fixtures__/messages');
 
-const parsedMessages = parseConfigure(JSON.stringify(messages));
-
-// all these are failing on       
-// at _fieldsByName (src/lowlevel/protobuf/message_decoder.js:110:21)
-// they all seem to have in common a field that has rule: repeated and type bytes
-//  {
-//     "rule": "repeated",
-//     "options": {},
-//     "type": "bytes",
-//     "name": "signatures",
-//     "id": 2
-// },
+const { ByteBuffer } = require("protobufjs-old-fixed-webpack");
 
 // they also have in common the fact that we encode them, but never decode them. this makes
 // me think that it a bug indeed.
@@ -47,21 +30,31 @@ const failingOnDecode = [
     'GetOwnershipId',
 ];
 
+let parsedMessages = null
+const getParsedMessages = async () => {
+    if (parsedMessages) return parsedMessages;
+    parsedMessages = await parseConfigure(messages);
+    return parsedMessages;
+}
+
+
 describe('buildBuffers', () => {
     fixtures
         .filter(f => f.name === 'Features')
         .forEach(f => {
 
             test(`message ${f.name}`, async () => {
+                const parsedMessages = await getParsedMessages();
+
                 expect(() => {
                     buildBuffers(parsedMessages, f.name, f.params)
                 }).not.toThrow();
                 const result = buildBuffers(parsedMessages, f.name, f.params)
-                console.log('old result', result);
                 result.forEach(r => {
                     expect(r.byteLength).toEqual(63);
                     expect(Array.from(new Uint8Array(r))).toMatchSnapshot();
                 })
+                console.log('result', result);
                 if (!failingOnDecode.includes(f.name)) {
                     const decoded = await receiveAndParse(parsedMessages, () => {
                         return Promise.resolve(ByteBuffer.concat(result));

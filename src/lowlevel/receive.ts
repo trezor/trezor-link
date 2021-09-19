@@ -39,8 +39,6 @@ class PartiallyParsedInput {
 function parseFirstInput(bytes: ArrayBuffer): PartiallyParsedInput {
   // convert to ByteBuffer so it's easier to read
   const byteBuffer: ByteBuffer = ByteBuffer.concat([bytes]);
-  // byteBuffer.readByte();
-  // byteBuffer.readByte();
 
   // checking first two bytes
   const sharp1: number = byteBuffer.readByte();
@@ -115,8 +113,10 @@ export async function receiveAndParse(
   receiver: () => Promise<ArrayBuffer>
 ): Promise<MessageFromTrezor> {
   const received = await receiveBuffer(receiver);
+  console.log('received --- ', received);
   const typeId: number = received.typeNumber;
   const buffer: ArrayBuffer = received.arrayBuffer();
+  console.log('buffer after', buffer);
   const decoder: MessageDecoder = new MessageDecoder(messages, typeId, buffer);
   return {
     message: decoder.decodedJSON(),
