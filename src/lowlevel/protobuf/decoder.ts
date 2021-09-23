@@ -1,4 +1,5 @@
 import { Enum } from "protobufjs";
+import * as ByteBuffer from 'bytebuffer';
 
 // todo:
 const transform = (field: any, value: any) => {
@@ -85,20 +86,24 @@ function messageToJSON(Message: any, payload) {
 
       res[key] = payload[key];
     }
-    debugger
   }
 
   return res;
 }
 
 export const decode = (Message, data) => {
+  const m = Message.decode(data);
+  const asObj = Message.toObject(m, {
+    defaults: false,
+    enums: String,  // enums as string names
+    // longs: String,  // longs as strings (requires long.js)
+    // bytes: String,  // bytes as base64 encoded strings
+    // defaults: true, // includes default values
+    arrays: true,   // populates empty arrays (repeated fields) even if defaults=false
+    objects: true,  // populates empty objects (map fields) even if defaults=false
+    oneofs: true
 
-    const m = Message.decode(data);
+  });
 
-    const asObj = Message.toObject(m, {
-        defaults: false,
-
-    });
-
-    return messageToJSON(m, asObj);
+  return messageToJSON(m, asObj);
 }

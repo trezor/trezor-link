@@ -46,15 +46,16 @@ const failingOnDecode = [
 
 describe('encoding json -> protobuf', () => {
     fixtures
-        // .filter(f => f.name === 'Features') // for debug
+    // .filter(f => ['WebAuthnRemoveResidentCredential', 'EthereumMessageSignature'].includes(f.name)) // for debug
+
+        // .filter(f => f.name === 'WebAuthnRemoveResidentCredential') // for debug
         .forEach(f => {
             test(`message ${f.name} ${JSON.stringify(f.params)}`, () => {
-                expect(() => {
-                    buildOne(parsedMessages, f.name, f.params)
-                }).not.toThrow();
                 // first encoded message and save its snapshot, this will be useful 
                 // when we start refactoring.
                 const encodedMessage = buildOne(parsedMessages, f.name, f.params)
+                // console.log('encodedMessage', encodedMessage);
+                
                 expect(encodedMessage.toString('hex')).toMatchSnapshot();
                 if (!failingOnDecode.includes(f.name)) {
                     // then decode message and check, whether decoded message matches original json

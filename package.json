@@ -13,14 +13,15 @@
     "test:unit:basic:debug": "node --inspect-brk node_modules/.bin/ts-jest --runInBand --testPathPattern basic.test --coverage false",
     "test:unit:complex": "jest --testPathPattern complex.test --coverage false",
     "test:unit:complex:debug": "node --inspect-brk node_modules/.bin/jest --runInBand --testPathPattern complex.test --coverage false",
-    "test:unit:old": "jest --testPathPattern old.*.test --coverage false",
-    "test:unit:new": "jest --testPathPattern new.*.test --coverage false",
+    "test:unit:buildOne:old": "jest --testPathPattern old.buildOne.test --coverage false",
+    "test:unit:buildBuffers:old": "jest --testPathPattern old.buildBuffers.test --coverage false",
+    "test:unit:buildOne:new": "jest --testPathPattern new.buildOne.test --coverage false",
+    "test:unit:buildBuffers:new": "jest --testPathPattern new.buildBuffers.test --coverage false",
     "test:unit:new:debug": "node --inspect-brk node_modules/.bin/ts-jest --runInBand --testPathPattern new.test --coverage false",
     "test:integration:old": "jest --verbose -c jest.config.integration.js --testPathPattern bridge-old.integration",
     "test:integration:new": "jest --verbose -c jest.config.integration.js --testPathPattern bridge-new.integration",
     "build:new": "yarn tsc",
     "build:new:connect": "rm -rf ./lib && yarn build:new  && rm -rf ../connect/node_modules/trezor-link/lib  && cp -rf ./lib ../connect/node_modules/trezor-link && cp ./yarn.lock package.json ../connect/node_modules/trezor-link && cd ../connect/node_modules/trezor-link && yarn"
-
   },
   "repository": "https://github.com/trezor/trezor-link.git",
   "author": "Karel Bílek <kb@karelbilek.com>",

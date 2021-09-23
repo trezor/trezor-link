@@ -49,22 +49,28 @@ const failingOnDecode = [
 
 describe('buildBuffers', () => {
     fixtures
-        .filter(f => f.name === 'Features')
-        .forEach(f => {
+        // .filter(f => [
 
+        //     // 'WebAuthnCredentials',
+        //     // 'BinanceGetAddress', 
+        //     // 'BinanceTxRequest'
+        //     // 'LoadDevice'
+        // ].includes(f.name))
+        .forEach(f => {
             test(`message ${f.name}`, async () => {
-                expect(() => {
-                    buildBuffers(parsedMessages, f.name, f.params)
-                }).not.toThrow();
+                // expect(() => {
+                //     buildBuffers(parsedMessages, f.name, f.params)
+                // }).not.toThrow();
                 const result = buildBuffers(parsedMessages, f.name, f.params)
-                console.log('old result', result);
                 result.forEach(r => {
                     expect(r.byteLength).toEqual(63);
                     expect(Array.from(new Uint8Array(r))).toMatchSnapshot();
                 })
                 if (!failingOnDecode.includes(f.name)) {
+                    let i = -1;
                     const decoded = await receiveAndParse(parsedMessages, () => {
-                        return Promise.resolve(ByteBuffer.concat(result));
+                        i++;
+                        return Promise.resolve(result[i]);
                     })
                     // then decode message and check, whether decoded message matches original json
                     expect(decoded.type).toEqual(f.name);

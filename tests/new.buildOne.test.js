@@ -46,8 +46,8 @@ const failingOnDecode = [
 
 // small problems
 const problems = [
-    'EthereumSignTx', // encoded message seems to be the same, just chunks are in different order.
-    'TezosSignTx' // this is encoding differently. don't know why. probably should solve this one!!!
+    // 'EthereumSignTx', // encoded message seems to be the same, just chunks are in different order.
+    // 'TezosSignTx' // this is encoding differently. don't know why. probably should solve this one!!!
 ];
 
 
@@ -61,25 +61,23 @@ const getParsedMessages = async () => {
 
 describe('encoding json -> protobuf', () => {
     fixtures
-        .filter(f => !problems.includes(f.name))
+        // .filter(f => ['WebAuthnRemoveResidentCredential', 'EthereumMessageSignature'].includes(f.name)) // for debug
+        // .filter(f => !problems.includes(f.name))
         .forEach((f) => {
 
             test(`message ${f.name} ${JSON.stringify(f.params)}`, async () => {
                 const parsedMessages = await getParsedMessages();
 
-                // expect(() => {
-                //     buildOne(parsedMessages, f.name, f.params)
-                // }).not.toThrow();
-
                 // first encoded message and save its snapshot, this will be useful 
                 // when we start refactoring.
                 const encodedMessage = buildOne(parsedMessages, f.name, f.params)
+                // console.log('encodedMessage', encodedMessage);
                 expect(encodedMessage.toString('hex')).toMatchSnapshot();
 
                 if (!failingOnDecode.includes(f.name)) {
                     // then decode message and check, whether decoded message matches original json
                     const decodedMessage = receiveOne(parsedMessages, encodedMessage);
-                    
+
                     expect(decodedMessage.type).toEqual(f.name);
                     expect(decodedMessage.message).toEqual(f.params);
 

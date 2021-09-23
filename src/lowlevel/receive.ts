@@ -67,7 +67,6 @@ async function receiveRest(
     return;
   }
   const data = await receiver();
-
   // sanity check
   if (data == null) {
     throw new Error(`Received no data.`);
@@ -85,6 +84,7 @@ async function receiveBuffer(
   const partialInput: PartiallyParsedInput = parseFirstInput(data);
 
   await receiveRest(partialInput, receiver);
+
   return partialInput;
 }
 
@@ -113,10 +113,8 @@ export async function receiveAndParse(
   receiver: () => Promise<ArrayBuffer>
 ): Promise<MessageFromTrezor> {
   const received = await receiveBuffer(receiver);
-  console.log('received --- ', received);
   const typeId: number = received.typeNumber;
   const buffer: ArrayBuffer = received.arrayBuffer();
-  console.log('buffer after', buffer);
   const decoder: MessageDecoder = new MessageDecoder(messages, typeId, buffer);
   return {
     message: decoder.decodedJSON(),

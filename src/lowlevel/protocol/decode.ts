@@ -8,11 +8,11 @@ export const decode = (data, { trezorFormat }) => {
 
     if (!trezorFormat) {
         return {
-            typeId, 
+            typeId,
             buffer: byteBuffer.toBuffer()
         }
     }
-    
-    
+
+
 }
 

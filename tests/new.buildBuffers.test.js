@@ -5,7 +5,9 @@ const receiveAndParse = require('../src/lowlevel/receive-new').receiveAndParse;
 const messages = require('../messages.json');
 const fixtures = require('./__fixtures__/messages');
 
-const { ByteBuffer } = require("protobufjs-old-fixed-webpack");
+const ByteBuffer = require("bytebuffer");
+
+// const { ByteBuffer } = require("protobufjs-old-fixed-webpack");
 
 // they also have in common the fact that we encode them, but never decode them. this makes
 // me think that it a bug indeed.
@@ -37,27 +39,28 @@ const getParsedMessages = async () => {
     return parsedMessages;
 }
 
-
 describe('buildBuffers', () => {
     fixtures
-        .filter(f => f.name === 'Features')
+        // .filter(f => [
+        //     // 'WebAuthnCredentials'
+        //     // 'BinanceGetAddress',
+        //     // 'BinanceTxRequest',
+        //     // 'LoadDevice',
+        // ].includes(f.name))
         .forEach(f => {
-
             test(`message ${f.name}`, async () => {
                 const parsedMessages = await getParsedMessages();
 
-                expect(() => {
-                    buildBuffers(parsedMessages, f.name, f.params)
-                }).not.toThrow();
                 const result = buildBuffers(parsedMessages, f.name, f.params)
+
                 result.forEach(r => {
                     expect(r.byteLength).toEqual(63);
-                    expect(Array.from(new Uint8Array(r))).toMatchSnapshot();
                 })
-                console.log('result', result);
                 if (!failingOnDecode.includes(f.name)) {
+                    let i = -1;
                     const decoded = await receiveAndParse(parsedMessages, () => {
-                        return Promise.resolve(ByteBuffer.concat(result));
+                        i++;
+                        return Promise.resolve(result[i]);
                     })
                     // then decode message and check, whether decoded message matches original json
                     expect(decoded.type).toEqual(f.name);

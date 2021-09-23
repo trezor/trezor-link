@@ -83,8 +83,6 @@ export default class BridgeTransport {
     this.configured = true;
     // @ts-ignore
     this._messages = messages;
-    // @ts-ignore
-
   }
 
   async listen(

@@ -58,6 +58,7 @@ class BuiltMessage {
   // encodes into "raw" data, but it can be too long and needs to be split into
   // smaller buffers
   _encodeLong(addTrezorHeaders: boolean): Uint8Array {
+
     const headerSize: number = HEADER_SIZE; // should be 8
     const bytes: Uint8Array = new Uint8Array(this.message.encodeAB());
     const fullSize: number =
@@ -81,11 +82,9 @@ class BuiltMessage {
 
     // then put in the actual message
     encodedByteBuffer.append(bytes);
-
     // and convert to uint8 array
     // (it can still be too long to send though)
     const encoded: Uint8Array = new Uint8Array(encodedByteBuffer.buffer);
-
     return encoded;
   }
 
@@ -98,7 +97,6 @@ class BuiltMessage {
 
     // How many pieces will there actually be
     const count: number = Math.floor((bytes.length - 1) / size) + 1;
-
     // slice and dice
     for (let i = 0; i < count; i++) {
       const slice: Uint8Array = bytes.subarray(i * size, (i + 1) * size);

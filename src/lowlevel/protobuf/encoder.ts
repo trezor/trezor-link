@@ -58,7 +58,6 @@ export function patch(Message: any, payload = {}) {
       const RefMessage = Message.lookup(Message.fields[key].type);
       patched[key] = RefMessage.values[value];
     } else {
-      console.log(5);
       patched[key] = value;
     }
   }
@@ -67,20 +66,17 @@ export function patch(Message: any, payload = {}) {
 
 export const encode = (Message, data) => {
 
-
   const payload = patch(Message, data);
 
   // Verify the payload if necessary (i.e. when possibly incomplete or invalid)
   const errMsg = Message.verify(payload);
   if (errMsg) {
-    console.log(errMsg);
     // throw Error(errMsg);
   }
 
   // Create a new message
   const message = Message.fromObject(payload, {
     enums: String, // enums as string names
-    // longs: String, // longs as strings (requires long.js)
     bytes: String, // bytes as base64 encoded strings
     defaults: false, // includes default values
     arrays: true, // populates empty arrays (repeated fields) even if defaults=false
@@ -89,8 +85,6 @@ export const encode = (Message, data) => {
   });
 
   // Encode a message to an Uint8Array (browser) or Buffer (node)
-  // const buffer = Message.encode(message).finish();
-
   const buffer = Message.encode(message).finish();
 
   return buffer;

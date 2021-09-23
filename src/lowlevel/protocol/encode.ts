@@ -1,5 +1,4 @@
-// import * as ByteBuffer from "bytebuffer";
-import { ByteBuffer } from "protobufjs-old-fixed-webpack";
+import * as ByteBuffer from "bytebuffer";
 
 const HEADER_SIZE = 1 + 1 + 4 + 2;
 const MESSAGE_HEADER_BYTE = 0x23;
@@ -9,10 +8,11 @@ export const encode = (
   data,
   { addTrezorHeaders, trezorFormat, messageType }
 ) => {
-  const headerSize: number = HEADER_SIZE; // should be 8
+  const headerSize = HEADER_SIZE; // should be 8
   // @ts-ignore
   const bytes: Uint8Array = new Uint8Array(data);
-  const fullSize: number = headerSize - 2 + bytes.length;
+  const fullSize =
+    (addTrezorHeaders ? headerSize : headerSize - 2) + data.length;
 
   const encodedByteBuffer = new ByteBuffer(fullSize);
 
@@ -30,13 +30,13 @@ export const encode = (
 
   // then put in the actual message
   encodedByteBuffer.append(bytes);
-
   // and convert to uint8 array
   // (it can still be too long to send though)
   const encoded: Uint8Array = new Uint8Array(encodedByteBuffer.buffer);
 
   if (!trezorFormat) {
     // return bytes;
+    // return encoded;
     return Buffer.from(encoded);
   }
 
@@ -44,8 +44,8 @@ export const encode = (
   const size = BUFFER_SIZE;
 
   // How many pieces will there actually be
-  const count = Math.floor((bytes.length - 1) / size) + 1;
-  
+  const count = Math.floor((encoded.length - 1) / size) + 1 || 1;
+
   // slice and dice
   for (let i = 0; i < count; i++) {
     const slice: Uint8Array = encoded.subarray(i * size, (i + 1) * size);
