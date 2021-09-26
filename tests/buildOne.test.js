@@ -1,63 +1,34 @@
-const parseConfigure = require('../src/lowlevel/protobuf/parse_protocol.js').parseConfigure;
-const buildOne = require('../src/lowlevel/send.js').buildOne;
-const receiveOne = require('../src/lowlevel/receive.js').receiveOne;
-const patch = require('../src/lowlevel/protobuf/monkey_patch.js').patch;
+const parseConfigure = require('../src/lowlevel/protobuf/parse_protocol').parseConfigure;
+const buildOne = require('../src/lowlevel/send').buildOne;
+const receiveOne = require('../src/lowlevel/receive').receiveOne;
 
-patch();
-
-const messages = require('./__fixtures__/messages.json');
+const messages = require('./__fixtures__/messages-new.json');
 const fixtures = require('./__fixtures__/messages');
 
-const parsedMessages = parseConfigure(JSON.stringify(messages));
-
-// all these are failing on       
-// at _fieldsByName (src/lowlevel/protobuf/message_decoder.js:110:21)
-// they all seem to have in common a field that has rule: repeated and type bytes
-//  {
-//     "rule": "repeated",
-//     "options": {},
-//     "type": "bytes",
-//     "name": "signatures",
-//     "id": 2
-// },
-
-// they also have in common the fact that we encode them, but never decode them. this makes
-// me think that it a bug indeed.
-const failingOnDecode = [
-    'GetAddress',
-    'TxAck',
-    'EosTxActionAck',
-    'MoneroTransactionInitRequest',
-    'MoneroTransactionInitAck',
-    'MoneroTransactionSetInputRequest',
-    'MoneroTransactionInputViniRequest',
-    'MoneroTransactionAllInputsSetAck',
-    'MoneroTransactionSetOutputRequest',
-    'MoneroTransactionSetOutputAck',
-    'MoneroTransactionAllOutSetRequest',
-    'MoneroTransactionSignInputRequest',
-    'MoneroKeyImageSyncStepRequest',
-    'DebugMoneroDiagRequest',
-    'DebugMoneroDiagAck',
-    'TezosSignTx',
-    'GetOwnershipProof',
-    'GetOwnershipId',
-];
+// parsing messages is lengthy operation (~2000ms) so we keep copy outside of tests
+let parsedMessages = null
+const getParsedMessages = async () => {
+    if (parsedMessages) return parsedMessages;
+    parsedMessages = await parseConfigure(messages);
+    return parsedMessages;
+}
 
 describe('encoding json -> protobuf', () => {
     fixtures
         .forEach(f => {
-            test(`message ${f.name} ${JSON.stringify(f.params)}`, () => {
+            test(`message ${f.name} ${JSON.stringify(f.params)}`, async () => {
 
+            const parsedMessages = await getParsedMessages();
                 const encodedMessage = buildOne(parsedMessages, f.name, f.params)
+
+                // todo: this is failing but it looks like only that 
+                // message chunks are the same just ordered differently
                 expect(encodedMessage.toString('hex')).toMatchSnapshot();
 
-                if (!failingOnDecode.includes(f.name)) {
-                    // then decode message and check, whether decoded message matches original json
-                    const decodedMessage = receiveOne(parsedMessages, encodedMessage);
-                    expect(decodedMessage.type).toEqual(f.name);
-                    expect(decodedMessage.message).toEqual(f.params);
-                }
+                // then decode message and check, whether decoded message matches original json
+                const decodedMessage = receiveOne(parsedMessages, encodedMessage);
+                expect(decodedMessage.type).toEqual(f.name);
+                expect(decodedMessage.message).toEqual(f.params);
             });
         });
 })

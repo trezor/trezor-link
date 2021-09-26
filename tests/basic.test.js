@@ -1,119 +1,94 @@
+const encode = require('../src/lowlevel/protobuf/encoder').encode;
+const decode = require('../src/lowlevel/protobuf/decoder').decode;
 
-const messageToJSON = require('../src/lowlevel/protobuf/message_decoder.js').messageToJSON
-const patch = require('../src/lowlevel/protobuf/monkey_patch.js').patch;
-
-const ProtoBuf = require("protobufjs-old-fixed-webpack");
-
-patch();
+const ProtoBuf = require("protobufjs");
 
 const messages = {
-    messages: [
-        {
-            "name": "String",
-            "fields": [
-                {
-                    "rule": "required",
-                    "options": {},
-                    "type": "string",
-                    "name": "field",
-                    "id": 1
-                }
-            ],
-        },
-        {
-            "name": "Uint32",
-            "fields": [
-                {
-                    "rule": "required",
-                    "options": {},
-                    "type": "uint32",
-                    "name": "field",
-                    "id": 2
-                }
-            ],
-        },
-        {
-            "name": "Uint64",
-            "fields": [
-                {
-                    "rule": "required",
-                    "options": {},
-                    "type": "uint64",
-                    "name": "field",
-                    "id": 3
-                }
-            ],
-        },
-        {
-            "name": "Bool",
-            "fields": [
-                {
-                    "rule": "required",
-                    "options": {},
-                    "type": "bool",
-                    "name": "field",
-                    "id": 4
-                }
-            ],
-        },
-        {
-            "name": "Sint32",
-            "fields": [
-                {
-                    "rule": "required",
-                    "options": {},
-                    "type": "sint32",
-                    "name": "field",
-                    "id": 5
-                }
-            ],
-        },
-        {
-            "name": "Sint64",
-            "fields": [
-                {
-                    "rule": "required",
-                    "options": {},
-                    "type": "sint64",
-                    "name": "field",
-                    "id": 6
-                }
-            ],
-        },
-        {
-            "name": "Bytes",
-            "fields": [
-                {
-                    "rule": "required",
-                    "options": {},
-                    "type": "bytes",
-                    "name": "field",
-                    "id": 7
-                }
-            ],
-        },
-
-        // complex and real life examples
-        {
-            "name": "ComplexFieldOfOptionals",
-            "fields": [
-                {
-                    "rule": "optional",
-                    "options": {},
-                    "type": "bool",
-                    "name": "bool",
-                    "id": 8
+    "nested": {
+        "messages": {
+            "nested": {
+                "String": {
+                    "fields": {
+                        "field": {
+                            "rule": "required",
+                            "type": "string",
+                            "id": 1
+                        }
+                    }
                 },
-                {
-                    "rule": "optional",
-                    "options": {},
-                    "type": "uint32",
-                    "name": "number",
-                    "id": 9
-                }
-            ],
-        },
-    ]
+                "Uint32": {
+                    "fields": {
+                        "field": {
+                            "rule": "required",
+                            "type": "uint32",
+                            "id": 2
+                        }
+                    }
+                },
+                "Uint64": {
+                    "fields": {
+                        "field": {
+                            "rule": "required",
+                            "type": "uint64",
+                            "id": 3
+                        }
+                    }
+                },
+                "Bool": {
+                    "fields": {
+                        "field": {
+                            "rule": "required",
+                            "type": "bool",
+                            "id": 4
+                        }
+                    }
+                },
+                "Sint32": {
+                    "fields": {
+                        "field": {
+                            "rule": "required",
+                            "type": "sint32",
+                            "id": 5
+                        }
+                    }
+                },
+                "Sint64": {
+                    "fields": {
+                        "field": {
+                            "rule": "required",
+                            "type": "sint64",
+                            "id": 6
+                        }
+                    }
+                },
+                "Bytes": {
+                    "fields": {
+                        "field": {
+                            "rule": "required",
+                            "type": "bytes",
+                            "id": 7
+                        }
+                    }
+                },
+
+                //  complex and real life examples
+                "ComplexFieldOfOptionals": {
+                    "fields": {
+                        "bool": {
+                            "rule": "optional",
+                            "type": "bool",
+                            "id": 8
+                        },
+                        "number": {
+                            "rule": "optional",
+                            "type": "uint32",
+                            "id": 9
+                        }
+                    }
+                },
+            }
+        }
+    }
 }
 
 const basicFixtures = [
@@ -170,22 +145,22 @@ const advancedFixtures = [
 ]
 
 describe('basic concepts', () => {
-    const Messages = ProtoBuf.newBuilder({})[`import`](messages).build();
+    const Messages = ProtoBuf.Root.fromJSON(messages);
 
     describe('primitives encode/decode', () => {
         basicFixtures.forEach(f => {
             describe(f.name, () => {
-                const Message = Messages[f.name];
+                const Message = Messages.lookup(`messages.${f.name}`);
 
                 test(f.name, async () => {
-                    // serialize old way - this is to confirm fixtures match old behavior
-                    const message = new Message(f.params);
-                    const encoded = message.encodeAB();
-                    expect(Buffer.from(encoded).toString('hex')).toEqual(f.encoded);
+                      // serialize new way - this is to confirm new lib won't break old behavior
+                      const encoded = encode(Message, f.params)
 
-                    // deserialize
-                    const decoded = messageToJSON(Message.decode(encoded));
-                    expect(decoded).toEqual(f.params);
+                      expect(encoded.toString('hex')).toEqual(f.encoded);
+  
+                      // deserialize new way - this is to confirm new lib won't break old behavior
+                      const decoded = decode(Message, encoded);
+                      expect(decoded).toEqual(f.params);
                 });
             })
         })
@@ -194,16 +169,18 @@ describe('basic concepts', () => {
     describe('advanced', () => {
         advancedFixtures.forEach(f => {
             describe(f.name, () => {
-                const Message = Messages[f.name];
+                const Message = Messages.lookup(`messages.${f.name}`);
 
                 test(f.name, () => {
-                    const message = new Message(f.in);
-                    const encoded = message.encodeAB();
-                    expect(Buffer.from(encoded).toString('hex')).toEqual(f.encoded);
+                   // serialize new way - this is to confirm new lib won't break old behavior
+                   const encoded = encode(Message, f.in)
 
-                    // deserialize
-                    const decoded = messageToJSON(Message.decode(encoded));
-                    expect(decoded).toEqual(f.out);
+                   expect(encoded.toString('hex')).toEqual(f.encoded);
+
+                   // deserialize new way - this is to confirm new lib won't break old behavior
+                   const decoded = decode(Message, encoded);
+                   
+                   expect(decoded).toEqual(f.out);
                 })
             })
 

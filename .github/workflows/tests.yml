@@ -7,11 +7,11 @@ on:
     branches: [master]
 
 jobs:
-  setup:
+  lint-tc-test-build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [10.x, 12.x, 14.x, 15.x]
+        node-version: [14.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
@@ -21,5 +21,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: yarn
+    - run: yarn type-check
+    - run: yarn lint
     - run: yarn test:unit
-
+    - run: yarn build:lib
