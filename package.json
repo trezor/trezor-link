@@ -8,7 +8,8 @@
     "lint": "eslint src",
     "build:lib": "rm -rf ./lib && yarn tsc",
     "publish:lib": "./scripts/publish-lib.sh",
-    "test:unit": "jest"
+    "test:unit": "jest",
+    "test:integration": "jest --verbose -c jest.config.integration.js --testPathPattern bridge.integration"
   },
   "repository": "https://github.com/trezor/trezor-link.git",
   "author": "Karel Bílek <kb@karelbilek.com>",
