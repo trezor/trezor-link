@@ -1,17 +1,15 @@
-/* @flow */
-
-export type Defered<T> = {
+export type Deferred<T> = {
   promise: Promise<T>;
   resolve: (t: T) => void;
   reject: (e: Error) => void;
   rejectingPromise: Promise<any>;
 };
 
-export function create<T>(): Defered<T> {
+export function create<T>(): Deferred<T> {
   let localResolve: (t: T) => void = (t: T) => {};
-  let localReject: (e?: ?Error) => void = (e) => {};
+  let localReject: (e?: Error) => void = (e) => {};
 
-  const promise = new Promise((resolve, reject) => {
+  const promise = new Promise<T>((resolve, reject) => {
     localResolve = resolve;
     localReject = reject;
   });
@@ -36,7 +34,10 @@ export function resolveTimeoutPromise<T>(delay: number, result: T): Promise<T> {
   });
 }
 
-export function rejectTimeoutPromise(delay: number, error: Error): Promise<any> {
+export function rejectTimeoutPromise(
+  delay: number,
+  error: Error
+): Promise<any> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       reject(error);

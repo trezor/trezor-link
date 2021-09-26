@@ -1,12 +1,10 @@
-/* @flow */
+/// <reference types="w3c-web-usb" />
 
-declare var __VERSION__: string;
+import { EventEmitter } from "events";
 
-import EventEmitter from 'events';
+declare let __VERSION__: string;
 
-import {debugInOut} from '../debug-decorator';
-
-type TrezorDeviceInfoDebug = {path: string, debug: boolean};
+type TrezorDeviceInfoDebug = { path: string; debug: boolean };
 
 const T1HID_VENDOR = 0x534c;
 
@@ -27,14 +25,14 @@ const DEBUG_INTERFACE_ID = 1;
 const DEBUG_ENDPOINT_ID = 2;
 
 export default class WebUsbPlugin {
-  name: string = `WebUsbPlugin`;
+  name = `WebUsbPlugin`;
 
   version: string = __VERSION__;
-  debug: boolean = false;
+  debug = false;
 
   usb: USB;
 
-  allowsWriteAndEnumerate: boolean = true;
+  allowsWriteAndEnumerate = true;
 
   configurationId: number = CONFIGURATION_ID;
   normalInterfaceId: number = INTERFACE_ID;
@@ -42,15 +40,13 @@ export default class WebUsbPlugin {
   debugInterfaceId: number = DEBUG_INTERFACE_ID;
   debugEndpointId: number = DEBUG_ENDPOINT_ID;
 
-  unreadableHidDevice: boolean = false;
+  unreadableHidDevice = false;
 
   unreadableHidDeviceChange: EventEmitter = new EventEmitter();
 
-  @debugInOut
-  async init(debug: ?boolean): Promise<void> {
+  async init(debug?: boolean): Promise<void> {
     this.debug = !!debug;
-    // $FlowIssue
-    const usb = navigator.usb;
+    const { usb } = navigator;
     if (usb == null) {
       throw new Error(`WebUSB is not available on this browser.`);
     } else {
@@ -60,8 +56,12 @@ export default class WebUsbPlugin {
 
   _deviceHasDebugLink(device: USBDevice): boolean {
     try {
-      const iface = device.configurations[0].interfaces[DEBUG_INTERFACE_ID].alternates[0];
-      return iface.interfaceClass === 255 && iface.endpoints[0].endpointNumber === DEBUG_ENDPOINT_ID;
+      const iface =
+        device.configurations[0].interfaces[DEBUG_INTERFACE_ID].alternates[0];
+      return (
+        iface.interfaceClass === 255 &&
+        iface.endpoints[0].endpointNumber === DEBUG_ENDPOINT_ID
+      );
     } catch (e) {
       return false;
     }
@@ -71,29 +71,37 @@ export default class WebUsbPlugin {
     return device.vendorId === T1HID_VENDOR;
   }
 
-  async _listDevices(): Promise<Array<{path: string, device: USBDevice, debug: boolean}>> {
+  async _listDevices(): Promise<
+    Array<{ path: string; device: USBDevice; debug: boolean }>
+  > {
     let bootloaderId = 0;
     const devices = await this.usb.getDevices();
-    const trezorDevices = devices.filter(dev => {
-      const isTrezor = TREZOR_DESCS.some(desc =>
-        dev.vendorId === desc.vendorId && dev.productId === desc.productId
+    const trezorDevices = devices.filter((dev) => {
+      const isTrezor = TREZOR_DESCS.some(
+        (desc) =>
+          dev.vendorId === desc.vendorId && dev.productId === desc.productId
       );
       return isTrezor;
     });
-    const hidDevices = trezorDevices.filter(dev => this._deviceIsHid(dev));
-    const nonHidDevices = trezorDevices.filter(dev => !this._deviceIsHid(dev));
+    const hidDevices = trezorDevices.filter((dev) => this._deviceIsHid(dev));
+    const nonHidDevices = trezorDevices.filter(
+      (dev) => !this._deviceIsHid(dev)
+    );
 
-    this._lastDevices = nonHidDevices.map(device => {
+    this._lastDevices = nonHidDevices.map((device) => {
       // path is just serial number
       // more bootloaders => number them, hope for the best
-      const serialNumber = device.serialNumber;
-      let path = (serialNumber == null || serialNumber === ``) ? `bootloader` : serialNumber;
+      const { serialNumber } = device;
+      let path =
+        serialNumber == null || serialNumber === ``
+          ? `bootloader`
+          : serialNumber;
       if (path === `bootloader`) {
         bootloaderId++;
-        path = path + bootloaderId;
+        path += bootloaderId;
       }
       const debug = this._deviceHasDebugLink(device);
-      return {path, device, debug};
+      return { path, device, debug };
     });
 
     const oldUnreadableHidDevice = this.unreadableHidDevice;
@@ -106,14 +114,17 @@ export default class WebUsbPlugin {
     return this._lastDevices;
   }
 
-  _lastDevices: Array<{path: string, device: USBDevice, debug: boolean}> = [];
+  _lastDevices: Array<{ path: string; device: USBDevice; debug: boolean }> = [];
 
   async enumerate(): Promise<Array<TrezorDeviceInfoDebug>> {
-    return (await this._listDevices()).map(info => ({path: info.path, debug: info.debug}));
+    return (await this._listDevices()).map((info) => ({
+      path: info.path,
+      debug: info.debug,
+    }));
   }
 
   async _findDevice(path: string): Promise<USBDevice> {
-    const deviceO = (this._lastDevices).find(d => d.path === path);
+    const deviceO = this._lastDevices.find((d) => d.path === path);
     if (deviceO == null) {
       throw new Error(`Action was interrupted.`);
     }
@@ -159,11 +170,12 @@ export default class WebUsbPlugin {
     }
   }
 
-  @debugInOut
   async connect(path: string, debug: boolean, first: boolean): Promise<void> {
     for (let i = 0; i < 5; i++) {
       if (i > 0) {
-        await new Promise((resolve) => setTimeout(() => resolve(), i * 200));
+        await new Promise((resolve) =>
+          setTimeout(() => resolve(undefined), i * 200)
+        );
       }
       try {
         return await this._connectIn(path, debug, first);
@@ -176,7 +188,11 @@ export default class WebUsbPlugin {
     }
   }
 
-  async _connectIn(path: string, debug: boolean, first: boolean): Promise<void> {
+  async _connectIn(
+    path: string,
+    debug: boolean,
+    first: boolean
+  ): Promise<void> {
     const device: USBDevice = await this._findDevice(path);
     await device.open();
 
@@ -194,7 +210,6 @@ export default class WebUsbPlugin {
     await device.claimInterface(interfaceId);
   }
 
-  @debugInOut
   async disconnect(path: string, debug: boolean, last: boolean): Promise<void> {
     const device: USBDevice = await this._findDevice(path);
 
@@ -207,8 +222,8 @@ export default class WebUsbPlugin {
 
   async requestDevice(): Promise<void> {
     // I am throwing away the resulting device, since it appears in enumeration anyway
-    await this.usb.requestDevice({filters: TREZOR_DESCS});
+    await this.usb.requestDevice({ filters: TREZOR_DESCS });
   }
 
-  requestNeeded: boolean = true;
+  requestNeeded = true;
 }

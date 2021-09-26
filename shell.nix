@@ -17,6 +17,5 @@ stdenv.mkDerivation {
   shellHook = ''
     export HISTFILE=".nix_bash_history"
     export PATH="$PATH:$(pwd)/node_modules/.bin"
-    autoPatchelf $(pwd)/node_modules/flow-bin/
   '';
 }

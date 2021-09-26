@@ -2,8 +2,8 @@
 src
 babel.config.js
 .eslintrc
+.eslintrc.js
 .eslintignore
-.flowconfig
 .gitignore
 .gitmodules
 .github
@@ -28,3 +28,4 @@ yarn.lock
 logs
 *.log
 .yarnclean
+yarn-error.log

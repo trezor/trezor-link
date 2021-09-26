@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+      "outDir": "./lib",
+      "allowJs": true,
+      "downlevelIteration": true, // todo: remove when send.js is removed
+      "noErrorTruncation": true,
+      "noImplicitAny": false, // todo: turn to true when old code is gone
+      "noUnusedParameters": false, // todo: turn to true when old code is gone
+    },
+    "include": ["./src/**/*"]
+  }

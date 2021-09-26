@@ -1,19 +1,14 @@
-/* @flow */
-'use strict';
-
 export type HttpRequestOptions = {
-    body?: ?(Array<any> | Object | string);
-    url: string;
-    method: 'POST' | 'GET';
-    skipContentTypeHeader?: boolean;
+  body?: Array<any> | Object | string;
+  url: string;
+  method: "POST" | "GET";
+  skipContentTypeHeader?: boolean;
 };
 
 // slight hack to make Flow happy, but to allow Node to set its own fetch
 // Request, RequestOptions and Response are built-in types of Flow for fetch API
-let _fetch: (input: string | Request, init?: RequestOptions) => Promise<Response> =
-  typeof window === `undefined`
-    ? () => Promise.reject()
-    : window.fetch;
+let _fetch: (input: string | Request, init?: any) => Promise<Response> =
+  typeof window === `undefined` ? () => Promise.reject() : window.fetch;
 
 let _isNode = false;
 
@@ -28,20 +23,18 @@ function contentType(body: any): string {
       return `text/plain`;
     }
     return `application/octet-stream`;
-  } else {
-    return `application/json`;
   }
+  return `application/json`;
 }
 
-function wrapBody(body: any): ?string {
+function wrapBody(body: any) {
   if (typeof body === `string`) {
     return body;
-  } else {
-    return JSON.stringify(body);
   }
+  return JSON.stringify(body);
 }
 
-function parseResult(text: string): mixed {
+function parseResult(text: string) {
   try {
     return JSON.parse(text);
   } catch (e) {
@@ -49,7 +42,7 @@ function parseResult(text: string): mixed {
   }
 }
 
-export async function request(options: HttpRequestOptions): Promise<mixed> {
+export async function request(options: HttpRequestOptions) {
   const fetchOptions = {
     method: options.method,
     body: wrapBody(options.body),
@@ -58,10 +51,13 @@ export async function request(options: HttpRequestOptions): Promise<mixed> {
   };
 
   // this is just for flowtype
-  if (options.skipContentTypeHeader == null || options.skipContentTypeHeader === false) {
+  if (
+    options.skipContentTypeHeader == null ||
+    options.skipContentTypeHeader === false
+  ) {
     fetchOptions.headers = {
       ...fetchOptions.headers,
-      'Content-Type': contentType(options.body == null ? `` : options.body),
+      "Content-Type": contentType(options.body == null ? `` : options.body),
     };
   }
 
@@ -69,7 +65,7 @@ export async function request(options: HttpRequestOptions): Promise<mixed> {
   if (_isNode) {
     fetchOptions.headers = {
       ...fetchOptions.headers,
-      'Origin': `https://node.trezor.io`,
+      Origin: `https://node.trezor.io`,
     };
   }
 
@@ -77,12 +73,11 @@ export async function request(options: HttpRequestOptions): Promise<mixed> {
   const resText = await res.text();
   if (res.ok) {
     return parseResult(resText);
+  }
+  const resJson = parseResult(resText);
+  if (typeof resJson === `object` && resJson != null && resJson.error != null) {
+    throw new Error(resJson.error);
   } else {
-    const resJson: mixed = parseResult(resText);
-    if (typeof resJson === `object` && resJson != null && resJson.error != null) {
-      throw new Error(resJson.error);
-    } else {
-      throw new Error(resText);
-    }
+    throw new Error(resText);
   }
 }
