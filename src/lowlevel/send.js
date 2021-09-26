@@ -145,7 +145,7 @@ function cleanupInput(message: Object): void {
 // name: Name of the message
 // data: Data to serialize, exactly as given by trezor.js
 // Returning buffers that will be sent to Trezor
-function buildBuffers(messages: Messages, name: string, data: Object): Array<ArrayBuffer> {
+export function buildBuffers(messages: Messages, name: string, data: Object): Array<ArrayBuffer> {
   const message: BuiltMessage = new BuiltMessage(messages, name, data);
   const encoded: Array<ArrayBuffer> = message.encode();
   return encoded;
