@@ -26,6 +26,7 @@ jobs:
     - run: yarn test:unit
     - run: yarn build:lib
     - run: ./e2e/run.sh
+  
   connect-e2e:
     runs-on: ubuntu-latest
     strategy:
@@ -46,4 +47,4 @@ jobs:
         submodules: 'recursive'
     - run: yarn
     - run: yarn build:lib
-    - run: ./e2e/run-in-connect.sh
+    - run: ./e2e/run-in-connect.sh signTransaction

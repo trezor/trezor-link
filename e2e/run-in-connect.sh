@@ -20,4 +20,4 @@ cd ./node_modules/trezor-link
 cd ../../
 
 # run integration tests in trezor-connect
-./tests/run.sh
+./tests/run.sh $1
