@@ -17,7 +17,9 @@ const primitiveTypes = [
 
 const transform = (fieldType: string, value: any) => {
   if (fieldType === "bytes") {
+    // message with single bytes field when empty (Initialize)
     if (!value) return null;
+
     return Buffer.from(value, `hex`);
   }
   return value;
@@ -28,7 +30,6 @@ const transform = (fieldType: string, value: any) => {
 */
 export function patch(Message: any, payload = {}) {
   const patched = {};
-
   if (!Message) return payload;
 
   for (const key in Message.fields) {
@@ -38,7 +39,12 @@ export function patch(Message: any, payload = {}) {
       continue;
     } else if (primitiveTypes.includes(field.type)) {
       if (field.repeated) {
-        patched[key] = value.map((v) => transform(field.type, v));
+        patched[key] = value.map((v) => {
+          // weird: signatures ['', '', ''];
+          if (!v) return v;
+          // normal
+          return transform(field.type, v);
+        });
       } else {
         patched[key] = transform(field.type, value);
       }
@@ -67,24 +73,17 @@ export function patch(Message: any, payload = {}) {
 }
 
 export const encode = (Message: Type, data: Object) => {
+  // console.log("raw", data);
   const payload = patch(Message, data);
-
+  // console.log("patched", payload);
+  // console.log("patched payload", JSON.stringify(payload, null, 2));
   // Verify the payload if necessary (i.e. when possibly incomplete or invalid)
   const errMsg = Message.verify(payload);
   if (errMsg) {
     // throw Error(errMsg);
   }
 
-  // Create a new message
   const message = Message.fromObject(payload);
-  // , {
-  //   enums: String, // enums as string names
-  //   bytes: String, // bytes as base64 encoded strings
-  //   defaults: false, // includes default values
-  //   arrays: true, // populates empty arrays (repeated fields) even if defaults=false
-  //   objects: true, // populates empty objects (map fields) even if defaults=false
-  //   oneofs: true, // includes virtual oneof fields set to the present field's name
-  // });
 
   // Encode a message to an Uint8Array (browser) or Buffer (node)
   const buffer = Message.encode(message).finish();

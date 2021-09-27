@@ -18,14 +18,14 @@ export const createMessageFromName = (
   const accessor = `hw.trezor.messages.${name}`;
   const Message = messages.lookupType(accessor);
   const MessageType = messages.lookupEnum(`MessageType`);
-  const messageType = MessageType.values[`MessageType_${name}`];
+  let messageType = MessageType.values[`MessageType_${name}`];
 
   // todo: this hack is probably not needed anymore
   // todo: maybe it is needed but not covered by tests here. try connect
 
-  // if (!messageType && Message.options) {
-  //   messageType = Message.options["(wire_type)"];
-  // }
+  if (!messageType && Message.options) {
+    messageType = Message.options["(wire_type)"];
+  }
 
   return {
     Message,
