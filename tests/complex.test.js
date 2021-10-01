@@ -508,7 +508,7 @@ const fixtures = [
     },
 ]
 
-describe('basic concepts', () => {
+describe('Real messages', () => {
     fixtures.forEach(f => {
         describe(f.name, () => {
 
@@ -524,11 +524,11 @@ describe('basic concepts', () => {
                 expect(decoded).toEqual(f.out ? f.out : f.in);
             })
         });
+    });
 
-        test('without Messages object', () => {
-            expect(() => {
-                encode(null, {})
-            }).toThrowError()
-        })
+    test('without Messages object', () => {
+        expect(() => {
+            encode(null, {})
+        }).toThrowError()
     })
 })

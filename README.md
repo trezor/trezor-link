@@ -10,15 +10,24 @@ Intended as a "building block" for other packages - it is used in ~~trezor.js~~ 
 
 *You probably don't want to use this package directly.* For communication with Trezor with a more high-level API, use [trezor-connect](https://github.com/trezor/connect).
 
+## What is the purpose
+
+- translate JSON payloads to binary messages using [protobuf definitions](https://github.com/trezor/trezor-common/tree/master/protob) comprehensible to Trezor devices
+- chunking and reading chunked messages according to the [Trezor protocol](https://github.com/trezor/trezor-common/blob/master/protob/protocol.md)
+- exposing single API for various transport methods:
+  - Trezor Bridge
+  - Webusb
 ## How to use
 
-There is a runnable [example](https://github.com/trezor/trezor-link/blob/fixup-old-tests/e2e/tests/bridge.integration).
+There is a runnable [example](https://github.com/trezor/trezor-link/blob/fixup-old-tests/e2e/tests/bridge.integration). This example launches [Trezor Bridge (trezord-go)](https://github.com/trezor/trezord-go) inside [trezor-user-env](https://github.com/trezor/trezor-user-env) 
+docker container. Please make there is no other bridge instance running on your computer. 
 
 To run in simply type:
   - `yarn`
   - `yarn build:lib`
+  - `git submodule update --init`
+  - `yarn pbjs -t json -p ./trezor-common/protob -o e2e/messages.json --keep-case messages-binance.proto messages-bitcoin.proto messages-bootloader.proto messages-cardano.proto messages-common.proto messages-crypto.proto messages-debug.proto messages-eos.proto messages-ethereum.proto messages-management.proto messages-monero.proto messages-nem.proto messages-ripple.proto messages-stellar.proto messages-tezos.proto messages-webauthn.proto messages.proto`
   - `./e2e/run.sh`;
-
 
 ## Process of moving to monorepo
 
@@ -30,5 +39,6 @@ Checklist:
   - [x] add tests
   - [x] update dependencies (protobuf.js and others)
   - [x] use Typescript instead of Flow
+  - [ ] remove messages.json and messages-new.json and related tests.
   - [ ] finish review within trezor-link repo
   - [ ] move into trezor-suite only after merging to avoid messing with dependencies inside monorepo
