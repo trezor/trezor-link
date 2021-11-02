@@ -7,6 +7,8 @@ babel.config.js
 .gitignore
 .gitmodules
 .github
+.prettierrc
+tsconfig*
 
 # Dependency directory
 node_modules
@@ -29,3 +31,12 @@ logs
 *.log
 .yarnclean
 yarn-error.log
+
+# Tests
+e2e
+coverage
+tests
+jest.config*
+
+# Other
+scripts

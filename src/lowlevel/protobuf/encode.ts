@@ -13,6 +13,9 @@ const transform = (fieldType: string, value: any) => {
         // normal flow
         return Buffer.from(value, `hex`);
     }
+    if (typeof value === 'number' && !Number.isSafeInteger(value)) {
+        throw new RangeError('field value is not within safe integer range');
+    }
     return value;
 };
 
@@ -64,9 +67,8 @@ export function patch(Message: Type, payload: any) {
 
 export const encode = (Message: Type, data: Object) => {
     const payload = patch(Message, data);
-
     const message = Message.fromObject(payload);
-
+    
     // Encode a message to an Uint8Array (browser) or Buffer (node)
     const buffer = Message.encode(message).finish();
 

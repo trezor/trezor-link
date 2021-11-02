@@ -4,7 +4,6 @@
 
 import { EventEmitter } from 'events';
 
-declare let __VERSION__: string;
 
 type TrezorDeviceInfoDebug = { path: string; debug: boolean };
 
@@ -29,7 +28,7 @@ const DEBUG_ENDPOINT_ID = 2;
 export default class WebUsbPlugin {
     name = `WebUsbPlugin`;
 
-    version: string = __VERSION__;
+    version = '';
     debug = false;
 
     usb: USB;
@@ -137,7 +136,7 @@ export default class WebUsbPlugin {
 
         const endpoint = debug ? this.debugEndpointId : this.normalEndpointId;
 
-        return device.transferOut(endpoint, newArray).then(() => {});
+        return device.transferOut(endpoint, newArray).then(() => { });
     }
 
     async receive(path: string, debug: boolean): Promise<ArrayBuffer> {
