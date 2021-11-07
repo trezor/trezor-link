@@ -1,3 +1,4 @@
+import * as ByteBuffer from 'bytebuffer';
 import { Type, Message, Field } from 'protobufjs/light';
 import { isPrimitiveField } from '../../utils/protobuf';
 
@@ -8,7 +9,8 @@ const transform = (field: Field, value: any) => {
     }
 
     if (field.type === 'bytes') {
-        return value.toString('hex');
+        return ByteBuffer.wrap(value).toString('hex');
+        // return value.toString('hex');
     }
 
     // [compatibility]
@@ -25,6 +27,7 @@ function messageToJSON(Message: Message<{}>, fields: Type['fields']) {
     // get rid of Message.prototype references
     const { ...message } = Message;
     const res: { [key: string]: any } = {};
+
     Object.keys(fields).forEach(key => {
         const field = fields[key];
         // @ts-ignore
@@ -64,8 +67,10 @@ function messageToJSON(Message: Message<{}>, fields: Type['fields']) {
     return res;
 }
 
-export const decode = (Message: Type, data: Buffer) => {
-    const decoded = Message.decode(data);
+export const decode = (Message: Type, data: ByteBuffer) => {
+    const buff = data.toBuffer();
+    const a = new Uint8Array(buff);
+    const decoded = Message.decode(a);
 
     // [compatibility]: in the end it should be possible to get rid of messageToJSON method and call
     // Message.toObject(decoded) to return result as plain javascript object. This method should be able to do

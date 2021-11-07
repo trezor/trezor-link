@@ -1,7 +1,6 @@
 // bridge v2 is half-way between lowlevel and not
 // however, it is not doing actual sending in/to the devices
 // and it refers enumerate to bridge
-
 import { request as http, setFetch as rSetFetch } from './http';
 import * as check from '../utils/highlevel-checks';
 import { semverCompare } from '../utils/semver-compare';
@@ -134,7 +133,7 @@ export default class BridgeTransport {
         if (typeof resData !== `string`) {
             throw new Error(`Returning data is not string.`);
         }
-        const jsonData = receiveOne(messages, Buffer.from(resData, `hex`));
+        const jsonData = receiveOne(messages, resData);
         return check.call(jsonData);
     }
 
@@ -161,7 +160,7 @@ export default class BridgeTransport {
         if (typeof resData !== `string`) {
             throw new Error(`Returning data is not string.`);
         }
-        const jsonData = receiveOne(messages, Buffer.from(resData, `hex`));
+        const jsonData = receiveOne(messages, resData);
         return check.call(jsonData);
     }
 

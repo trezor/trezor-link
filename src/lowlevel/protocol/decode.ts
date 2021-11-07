@@ -23,14 +23,12 @@ const readHeaderChunked = (buffer: ByteBuffer) => {
     return { sharp1, sharp2, typeId, length };
 };
 
-export const decode = (data: Buffer) => {
-    const byteBuffer = ByteBuffer.wrap(data);
-
+export const decode = (byteBuffer: ByteBuffer) => {
     const { typeId } = readHeader(byteBuffer);
 
     return {
         typeId,
-        buffer: byteBuffer.toBuffer(),
+        buffer: byteBuffer,
     };
 };
 
@@ -38,7 +36,7 @@ export const decode = (data: Buffer) => {
 // [compatibility]: accept Buffer just like decode does. But this would require changes in lower levels
 export const decodeChunked = (bytes: ArrayBuffer) => {
     // convert to ByteBuffer so it's easier to read
-    const byteBuffer = ByteBuffer.wrap(bytes);
+    const byteBuffer = ByteBuffer.wrap(bytes, undefined, undefined, true);
 
     const { sharp1, sharp2, typeId, length } = readHeaderChunked(byteBuffer);
 

@@ -8,12 +8,11 @@ type Options<Chunked> = {
     messageType: number;
 };
 
-function encode(data: Uint8Array, options: Options<true>): Buffer[];
-function encode(data: Uint8Array, options: Options<false>): Buffer;
+function encode(data: ByteBuffer, options: Options<true>): Buffer[];
+function encode(data: ByteBuffer, options: Options<false>): Buffer;
 function encode(data: any, options: any): any {
     const { addTrezorHeaders, chunked, messageType } = options;
-    const bytes: Uint8Array = new Uint8Array(data);
-    const fullSize = (addTrezorHeaders ? HEADER_SIZE : HEADER_SIZE - 2) + data.length;
+    const fullSize = (addTrezorHeaders ? HEADER_SIZE : HEADER_SIZE - 2) + data.limit;
 
     const encodedByteBuffer = new ByteBuffer(fullSize);
 
@@ -27,22 +26,22 @@ function encode(data: any, options: any): any {
     encodedByteBuffer.writeUint16(messageType);
 
     // 4 bytes (so 8 in total)
-    encodedByteBuffer.writeUint32(bytes.length);
+    encodedByteBuffer.writeUint32(data.limit);
 
     // then put in the actual message
-    encodedByteBuffer.append(bytes);
+    encodedByteBuffer.append(data.buffer);
 
     encodedByteBuffer.reset();
 
     if (chunked === false) {
-        return encodedByteBuffer.buffer;
+        return encodedByteBuffer;
     }
 
     const result: Buffer[] = [];
     const size = BUFFER_SIZE;
 
     // How many pieces will there actually be
-    const count = Math.floor((encodedByteBuffer.buffer.length - 1) / size) + 1 || 1;
+    const count = Math.floor((encodedByteBuffer.limit - 1) / size) + 1 || 1;
 
     // slice and dice
     for (let i = 0; i < count; i++) {

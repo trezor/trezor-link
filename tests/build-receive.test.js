@@ -101,7 +101,6 @@ describe('encoding json -> protobuf -> json', () => {
                 test('buildOne - receiveOne', () => {
                     // encoded message
                     const encodedMessage = buildOne(parsedMessages, f.name, f.in)
-
                     // then decode message and check, whether decoded message matches original json
                     const decodedMessage = receiveOne(parsedMessages, encodedMessage);
                     expect(decodedMessage.type).toEqual(f.name);

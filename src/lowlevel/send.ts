@@ -8,8 +8,8 @@ import { createMessageFromName } from './protobuf/messages';
 
 // Sends more buffers to device.
 async function sendBuffers(
-    sender: (data: ArrayBuffer) => Promise<void>,
-    buffers: Array<ArrayBuffer>,
+    sender: (data: Buffer) => Promise<void>,
+    buffers: Array<Buffer>,
 ): Promise<void> {
     for (const buffer of buffers) {
         await sender(buffer);
@@ -43,7 +43,7 @@ export const buildBuffers = (messages: Root, name: string, data: Object) => {
 // Resolves if everything gets sent
 export async function buildAndSend(
     messages: Root,
-    sender: (data: ArrayBuffer) => Promise<void>,
+    sender: (data: Buffer) => Promise<void>,
     name: string,
     data: Object,
 ): Promise<void> {

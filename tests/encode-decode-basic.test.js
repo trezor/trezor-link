@@ -189,7 +189,6 @@ describe('basic concepts', () => {
                 test(f.name, async () => {
                     // serialize new way - this is to confirm new lib won't break old behavior
                     const encoded = encode(Message, f.params)
-
                     expect(encoded.toString('hex')).toEqual(f.encoded);
 
                     // deserialize new way - this is to confirm new lib won't break old behavior

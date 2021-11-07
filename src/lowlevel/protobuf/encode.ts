@@ -1,3 +1,4 @@
+import ByteBuffer = require('bytebuffer');
 import { Type } from 'protobufjs/light';
 
 import { isPrimitiveField } from '../../utils/protobuf';
@@ -68,9 +69,10 @@ export function patch(Message: Type, payload: any) {
 export const encode = (Message: Type, data: Object) => {
     const payload = patch(Message, data);
     const message = Message.fromObject(payload);
-    
     // Encode a message to an Uint8Array (browser) or Buffer (node)
     const buffer = Message.encode(message).finish();
-
-    return buffer;
+    const bytebuffer = new ByteBuffer(buffer.byteLength);
+    bytebuffer.append(buffer);
+    bytebuffer.reset();
+    return bytebuffer;
 };

@@ -4,7 +4,6 @@
 
 import { EventEmitter } from 'events';
 
-
 type TrezorDeviceInfoDebug = { path: string; debug: boolean };
 
 const T1HID_VENDOR = 0x534c;
@@ -136,7 +135,7 @@ export default class WebUsbPlugin {
 
         const endpoint = debug ? this.debugEndpointId : this.normalEndpointId;
 
-        return device.transferOut(endpoint, newArray).then(() => { });
+        return device.transferOut(endpoint, newArray).then(() => {});
     }
 
     async receive(path: string, debug: boolean): Promise<ArrayBuffer> {
