@@ -11,11 +11,6 @@ yarn
 yarn add protobufjs
 yarn pbjs -t json -p ./submodules/trezor-common/protob -o messages.json --keep-case messages-binance.proto messages-bitcoin.proto messages-bootloader.proto messages-cardano.proto messages-common.proto messages-crypto.proto messages-debug.proto messages-eos.proto messages-ethereum.proto messages-management.proto messages-monero.proto messages-nem.proto messages-ripple.proto messages-stellar.proto messages-tezos.proto messages-webauthn.proto messages.proto
 cp messages.json src/data/messages/messages.json
-# exclude test with uint64 number in fixtures
-cat ./tests/__fixtures__/ethereumSignTransactionEip155.js
-echo "replace uint64 test"
-sed -i 's/^.*tests: commonFixtures.*$/tests: commonFixtures.tests.filter(t => t.name !== "max_uint64").flatMap(({ name, parameters, result }) => {/' ./tests/__fixtures__/ethereumSignTransactionEip155.js
-cat ./tests/__fixtures__/ethereumSignTransactionEip155.js
 yarn build:npm
 yarn build:inline
 
